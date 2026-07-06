@@ -1,0 +1,294 @@
+"""The Downloadify desktop GUI: a single window built with PyQt6."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtGui import QTextCursor
+from PyQt6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QPlainTextEdit,
+    QProgressBar,
+    QPushButton,
+    QSizePolicy,
+    QSplitter,
+    QStyle,
+    QVBoxLayout,
+    QWidget,
+)
+
+from downloadify import config
+from downloadify.core.models import PlaylistDownloadSummary, TrackResult, TrackStatus
+from downloadify.gui.worker import DownloadWorker
+
+_STYLESHEET_PATH = Path(__file__).resolve().parent / "style.qss"
+
+_STATUS_COLOR_SUCCESS = "#1db954"
+_STATUS_COLOR_WARNING = "#e0a030"
+_STATUS_COLOR_ERROR = "#e64b4b"
+
+_BUTTON_ICON_SIZE = QSize(20, 20)
+
+
+class MainWindow(QMainWindow):
+    def __init__(self) -> None:
+        super().__init__()
+        self.setWindowTitle("Downloadify")
+        self.resize(1200, 860)
+        self.setMinimumSize(780, 580)
+
+        self._worker: DownloadWorker | None = None
+
+        self._build_ui()
+
+    # -- UI construction ---------------------------------------------------
+
+    def _build_ui(self) -> None:
+        central = QWidget()
+        self.setCentralWidget(central)
+
+        root = QVBoxLayout(central)
+        root.setContentsMargins(36, 32, 36, 28)
+        root.setSpacing(24)
+
+        root.addLayout(self._build_header())
+
+        splitter = QSplitter(Qt.Orientation.Vertical)
+        splitter.setChildrenCollapsible(False)
+        splitter.addWidget(self._build_controls_panel())
+        splitter.addWidget(self._build_log_panel())
+        # The controls panel keeps its natural size; the log panel absorbs
+        # any extra space, so shrinking/maximizing the window mostly just
+        # grows or shrinks the log -- the part most worth resizing.
+        splitter.setStretchFactor(0, 0)
+        splitter.setStretchFactor(1, 1)
+        splitter.setSizes([360, 500])
+        root.addWidget(splitter, stretch=1)
+
+    def _build_header(self) -> QVBoxLayout:
+        header = QVBoxLayout()
+        header.setSpacing(6)
+
+        title = QLabel("Downloadify")
+        title.setObjectName("HeaderTitle")
+        header.addWidget(title)
+
+        subtitle = QLabel("Paste a public Spotify playlist link to download it as MP3s.")
+        subtitle.setObjectName("HeaderSubtitle")
+        header.addWidget(subtitle)
+
+        return header
+
+    def _build_controls_panel(self) -> QWidget:
+        card = QFrame()
+        card.setObjectName("Card")
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(28, 26, 28, 26)
+        layout.setSpacing(8)
+
+        layout.addWidget(self._field_label("Playlist URL"))
+        self.url_input = QLineEdit()
+        self.url_input.setPlaceholderText(
+            "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+        )
+        layout.addWidget(self.url_input)
+
+        layout.addSpacing(12)
+        layout.addWidget(self._field_label("Output folder"))
+        folder_row = QHBoxLayout()
+        folder_row.setSpacing(12)
+        self.folder_input = QLineEdit(str(config.DEFAULT_DOWNLOAD_DIR))
+        folder_row.addWidget(self.folder_input, stretch=1)
+        browse_btn = QPushButton("Browse…")
+        browse_btn.setObjectName("browseButton")
+        browse_btn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon))
+        browse_btn.setIconSize(_BUTTON_ICON_SIZE)
+        browse_btn.setMinimumWidth(130)
+        browse_btn.clicked.connect(self._choose_folder)
+        folder_row.addWidget(browse_btn)
+        layout.addLayout(folder_row)
+
+        layout.addSpacing(16)
+        action_row = QHBoxLayout()
+        action_row.setSpacing(14)
+        self.download_btn = QPushButton("Download Playlist")
+        self.download_btn.setObjectName("downloadButton")
+        self.download_btn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowDown))
+        self.download_btn.setIconSize(_BUTTON_ICON_SIZE)
+        self.download_btn.clicked.connect(self._start_download)
+        action_row.addWidget(self.download_btn, stretch=1)
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.setObjectName("cancelButton")
+        self.cancel_btn.setEnabled(False)
+        self.cancel_btn.setMinimumWidth(130)
+        self.cancel_btn.clicked.connect(self._cancel_download)
+        action_row.addWidget(self.cancel_btn)
+        layout.addLayout(action_row)
+
+        layout.addSpacing(18)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 1)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setTextVisible(False)
+        layout.addWidget(self.progress_bar)
+
+        self.status_label = QLabel("Idle.")
+        self.status_label.setObjectName("StatusLabel")
+        layout.addWidget(self.status_label)
+
+        return card
+
+    def _build_log_panel(self) -> QWidget:
+        panel = QWidget()
+        panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
+
+        header_row = QHBoxLayout()
+        log_header = QLabel("Progress log")
+        log_header.setObjectName("LogHeader")
+        header_row.addWidget(log_header)
+        header_row.addStretch(1)
+        self.full_logs_checkbox = QCheckBox("Show full logs")
+        self.full_logs_checkbox.setChecked(False)
+        header_row.addWidget(self.full_logs_checkbox)
+        layout.addLayout(header_row)
+
+        self.log_view = QPlainTextEdit()
+        self.log_view.setObjectName("LogView")
+        self.log_view.setReadOnly(True)
+        self.log_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        layout.addWidget(self.log_view, stretch=1)
+
+        return panel
+
+    @staticmethod
+    def _field_label(text: str) -> QLabel:
+        label = QLabel(text)
+        label.setObjectName("FieldLabel")
+        return label
+
+    # -- UI actions ----------------------------------------------------
+
+    def _choose_folder(self) -> None:
+        folder = QFileDialog.getExistingDirectory(
+            self, "Choose output folder", self.folder_input.text()
+        )
+        if folder:
+            self.folder_input.setText(folder)
+
+    def _append_log(self, message: str) -> None:
+        self.log_view.appendPlainText(message)
+        self.log_view.moveCursor(QTextCursor.MoveOperation.End)
+
+    def _on_log_message(self, message: str, verbose: bool) -> None:
+        if verbose and not self.full_logs_checkbox.isChecked():
+            return
+        self._append_log(message)
+
+    def _set_status(self, text: str, color: str | None = None) -> None:
+        self.status_label.setText(text)
+        self.status_label.setStyleSheet(f"color: {color}; font-weight: 600;" if color else "")
+
+    def _start_download(self) -> None:
+        playlist_url = self.url_input.text().strip()
+        if not playlist_url:
+            QMessageBox.warning(self, "Missing URL", "Please paste a Spotify playlist URL.")
+            return
+
+        output_dir = Path(self.folder_input.text().strip() or config.DEFAULT_DOWNLOAD_DIR)
+
+        self.log_view.clear()
+        self.progress_bar.setRange(0, 1)
+        self.progress_bar.setValue(0)
+        self._set_status("Starting…")
+        self.download_btn.setEnabled(False)
+        self.cancel_btn.setEnabled(True)
+
+        self._worker = DownloadWorker(playlist_url, output_dir)
+        self._worker.log_message.connect(self._on_log_message)
+        self._worker.progress_updated.connect(self._on_progress)
+        self._worker.track_finished.connect(self._on_track_finished)
+        self._worker.finished_ok.connect(self._on_finished_ok)
+        self._worker.cancelled.connect(self._on_cancelled)
+        self._worker.failed.connect(self._on_failed)
+        self._worker.start()
+
+    def _cancel_download(self) -> None:
+        if self._worker:
+            self._worker.cancel()
+            self._set_status("Cancelling…")
+            self.cancel_btn.setEnabled(False)
+
+    # -- Worker signal handlers ---------------------------------------
+
+    def _on_progress(self, done: int, total: int) -> None:
+        self.progress_bar.setRange(0, max(total, 1))
+        self.progress_bar.setValue(done)
+        self.status_label.setText(f"Downloading… {done}/{total} tracks")
+
+    def _on_track_finished(self, result: TrackResult) -> None:
+        icon = "SUCCESS" if result.status == TrackStatus.DONE else "FAIL"
+        line = f"[{icon}] {result.track.display_name}"
+        if result.status != TrackStatus.DONE and result.error:
+            line += f" -- {result.error}"
+        self._append_log(line)
+
+    def _on_finished_ok(self, summary: PlaylistDownloadSummary) -> None:
+        # The log already has the per-track breakdown (and the list of any
+        # failures, logged by the pipeline itself) -- a blocking popup on
+        # top of that for a normal, successful run is more interruption
+        # than the moment warrants, so this just updates the status line.
+        self._set_status(
+            f"Finished: {summary.succeeded}/{summary.total} downloaded.",
+            _STATUS_COLOR_SUCCESS,
+        )
+        self._reset_ui_after_run()
+
+    def _on_cancelled(self, summary: PlaylistDownloadSummary) -> None:
+        self._set_status(
+            f"Cancelled: {summary.succeeded}/{summary.total} downloaded before stopping.",
+            _STATUS_COLOR_WARNING,
+        )
+        self._reset_ui_after_run()
+
+    def _on_failed(self, error_message: str) -> None:
+        # Unlike a normal finish, this means the run never really got going
+        # (bad URL, playlist unreachable, etc.) -- a clear, blocking signal
+        # is warranted here since there's no per-track log to fall back on.
+        self._set_status("Failed.", _STATUS_COLOR_ERROR)
+        self._append_log(f"ERROR: {error_message}")
+        self._reset_ui_after_run()
+        QMessageBox.critical(self, "Download failed", error_message)
+
+    def _reset_ui_after_run(self) -> None:
+        self.download_btn.setEnabled(True)
+        self.cancel_btn.setEnabled(False)
+        self.progress_bar.setRange(0, 1)
+        self.progress_bar.setValue(0)
+
+
+def run_gui() -> None:
+    """Entrypoint used by main.py to launch the desktop app."""
+    app = QApplication(sys.argv)
+    try:
+        app.setStyleSheet(_STYLESHEET_PATH.read_text(encoding="utf-8"))
+    except OSError:
+        pass  # Fall back to the default Qt look rather than fail to launch.
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())

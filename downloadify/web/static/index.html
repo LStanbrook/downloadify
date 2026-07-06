@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Downloadify</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Downloadify</h1>
+      <p class="subtitle">Paste a public Spotify playlist link to download it as MP3s.</p>
+    </header>
+
+    <form id="download-form">
+      <label for="playlist-url">Spotify playlist URL</label>
+      <input
+        id="playlist-url"
+        type="text"
+        placeholder="https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+        required
+      />
+
+      <label for="output-dir">Output folder (on the server running this app)</label>
+      <input id="output-dir" type="text" placeholder="downloadify_downloads" />
+
+      <div class="actions">
+        <button id="download-btn" type="submit">Download Playlist</button>
+        <button id="cancel-btn" type="button" disabled>Cancel</button>
+      </div>
+    </form>
+
+    <section class="progress-section">
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <p id="status-text">Idle.</p>
+    </section>
+
+    <section>
+      <div class="log-header">
+        <h2>Progress log</h2>
+        <label class="checkbox-label">
+          <input type="checkbox" id="full-logs-checkbox" />
+          Show full logs
+        </label>
+      </div>
+      <pre id="log-view" class="log-view"></pre>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

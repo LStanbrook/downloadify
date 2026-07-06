@@ -1,0 +1,206 @@
+/* Downloadify desktop theme.
+   Palette kept in sync with the web app's static/style.css:
+     background  #121212     accent       #1db954 (Spotify green)
+     panel       #1c1c1c     accent-dark  #169c46
+     border      #2e2e2e     danger       #e64b4b
+     text        #eaeaea     muted        #9a9a9a
+*/
+
+QWidget {
+    background-color: #121212;
+    color: #eaeaea;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 12.5pt;
+}
+
+QLabel#HeaderTitle {
+    color: #1db954;
+    font-size: 40pt;
+    font-weight: 800;
+}
+
+QLabel#HeaderSubtitle {
+    color: #b0b0b0;
+    font-size: 14pt;
+}
+
+QFrame#Card {
+    background-color: #1c1c1c;
+    border: 1px solid #2e2e2e;
+    border-radius: 12px;
+}
+
+QLabel#FieldLabel {
+    color: #aaaaaa;
+    font-size: 12pt;
+    font-weight: 600;
+}
+
+QLineEdit {
+    background-color: #0f0f0f;
+    border: 1px solid #2e2e2e;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 12.5pt;
+    color: #eaeaea;
+    selection-background-color: #1db954;
+    selection-color: #04240f;
+}
+
+QLineEdit:focus {
+    border: 1px solid #1db954;
+}
+
+QLineEdit:disabled {
+    color: #666666;
+}
+
+QPushButton {
+    border-radius: 8px;
+    padding: 18px 36px;
+    font-weight: 700;
+    font-size: 14.5pt;
+    border: none;
+}
+
+QPushButton#downloadButton {
+    background-color: #1db954;
+    color: #04240f;
+}
+
+QPushButton#downloadButton:hover:!disabled {
+    background-color: #22d461;
+}
+
+QPushButton#downloadButton:pressed:!disabled {
+    background-color: #169c46;
+}
+
+QPushButton#downloadButton:disabled {
+    background-color: #2b3a30;
+    color: #5c6b60;
+}
+
+QPushButton#cancelButton {
+    background-color: transparent;
+    border: 1px solid #e64b4b;
+    color: #e64b4b;
+}
+
+QPushButton#cancelButton:hover:!disabled {
+    background-color: rgba(230, 75, 75, 0.12);
+}
+
+QPushButton#cancelButton:disabled {
+    border: 1px solid #4a3232;
+    color: #6b4a4a;
+}
+
+QPushButton#browseButton {
+    background-color: #262626;
+    color: #eaeaea;
+    border: 1px solid #3a3a3a;
+}
+
+QPushButton#browseButton:hover {
+    background-color: #303030;
+}
+
+QProgressBar {
+    background-color: #0f0f0f;
+    border: 1px solid #2e2e2e;
+    border-radius: 16px;
+    max-height: 54px;
+    min-height: 54px;
+    text-align: center;
+    color: transparent;
+}
+
+QProgressBar::chunk {
+    background-color: #1db954;
+    border-radius: 15px;
+}
+
+QLabel#StatusLabel {
+    color: #b0b0b0;
+    font-size: 15pt;
+    font-weight: 600;
+}
+
+QCheckBox {
+    color: #d8d8d8;
+    font-size: 14pt;
+    font-weight: 600;
+    spacing: 12px;
+}
+
+QCheckBox::indicator {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    border: 1px solid #3a3a3a;
+    background-color: #0f0f0f;
+}
+
+QCheckBox::indicator:hover {
+    border: 1px solid #1db954;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #1db954;
+    border: 1px solid #1db954;
+}
+
+QLabel#LogHeader {
+    color: #eaeaea;
+    font-size: 17pt;
+    font-weight: 700;
+}
+
+QPlainTextEdit#LogView {
+    background-color: #0a0a0a;
+    border: 1px solid #2e2e2e;
+    border-radius: 10px;
+    padding: 16px;
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 12.5pt;
+    color: #c9c9c9;
+}
+
+QSplitter::handle {
+    background-color: transparent;
+}
+
+QSplitter::handle:vertical {
+    height: 12px;
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 11px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #333333;
+    border-radius: 5px;
+    min-height: 24px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #444444;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+    border: none;
+    background: none;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QMessageBox {
+    background-color: #1c1c1c;
+}

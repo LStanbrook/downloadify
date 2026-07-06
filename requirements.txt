@@ -1,0 +1,12 @@
+# Core
+requests>=2.31.0
+python-dotenv>=1.0.1
+yt-dlp>=2024.4.9
+
+# Desktop GUI
+PyQt6>=6.6.1
+
+# Web app
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.6.0
