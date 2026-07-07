@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Downloadify</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <a class="wordmark" href="/">
+        <span class="dot"></span>Downloadify
+      </a>
+      <a class="nav-link" href="https://github.com/LStanbrook/downloadify" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+
+    <header>
+      <div class="header-text">
+        <p class="eyebrow">Web app</p>
+        <h1>Playlist in.<br />MP3s out.</h1>
+        <p class="subtitle">Paste a public Spotify playlist link to download it as MP3s.</p>
+      </div>
+      <div class="spotify-login" id="spotify-login-section">
+        <p id="spotify-login-status">Not logged into Spotify</p>
+        <div class="spotify-login-actions">
+          <button id="spotify-login-btn" type="button" class="secondary-btn">Log in with Spotify</button>
+          <button id="browse-playlists-btn" type="button" class="secondary-btn" disabled>Browse my playlists…</button>
+        </div>
+      </div>
+    </header>
+
+    <dialog id="playlist-picker-dialog">
+      <h3>Choose a playlist</h3>
+      <div id="playlist-picker-list" class="playlist-picker-list"></div>
+      <div class="playlist-picker-actions">
+        <button type="button" id="playlist-picker-cancel" class="secondary-btn">Cancel</button>
+      </div>
+    </dialog>
+
+    <form id="download-form" class="card">
+      <label for="playlist-url">Spotify playlist URL</label>
+      <input
+        id="playlist-url"
+        type="text"
+        placeholder="https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+        required
+      />
+
+      <div id="output-dir-field">
+        <label for="output-dir">Output folder (on the server running this app)</label>
+        <input id="output-dir" type="text" placeholder="downloadify_downloads" />
+      </div>
+
+      <div class="actions">
+        <button id="download-btn" type="submit" class="btn-primary">Download Playlist</button>
+        <button id="cancel-btn" type="button" class="btn-ghost" disabled>Cancel</button>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <p id="status-text">Idle.</p>
+        <a id="download-zip-link" class="btn-primary download-zip-link" download>Download ZIP</a>
+      </div>
+    </form>
+
+    <section class="log-section">
+      <div class="log-header">
+        <h2>Progress log</h2>
+        <label class="checkbox-label">
+          <input type="checkbox" id="full-logs-checkbox" />
+          Show full logs
+        </label>
+      </div>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <span></span><span></span><span></span>
+          <p class="label">downloadify — log</p>
+        </div>
+        <pre id="log-view" class="log-view"></pre>
+      </div>
+    </section>
+
+    <footer>
+      <p class="fine-print">
+        <span id="fine-print-lead">Runs entirely on this machine — nothing is uploaded anywhere.</span>
+        <a href="https://github.com/LStanbrook/downloadify" target="_blank" rel="noopener">View source on GitHub ↗</a>
+      </p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

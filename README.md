@@ -41,7 +41,7 @@ downloadify/
 │   └── web/
 │       ├── server.py                # FastAPI routes + SSE log streaming
 │       ├── job_manager.py           # Background job tracking
-│       └── static/                  # index.html / style.css / app.js
+│       └── static/                  # index.html = marketing homepage; static/app/ = the actual tool
 └── downloadify_downloads/        # Default output folder
 ```
 
@@ -146,9 +146,11 @@ python main.py --mode web
 # optionally: python main.py --mode web --host 0.0.0.0 --port 8000
 ```
 
-Then open **http://127.0.0.1:8000** in a browser. Paste a playlist URL, optionally
-change the output folder (this is a path *on the machine running the server*),
-and click **Download Playlist**. Logs stream live into the page (also printed
+Then open **http://127.0.0.1:8000** in a browser — this shows a marketing
+homepage first; click **Try it in your browser** (or go straight to
+`http://127.0.0.1:8000/app`) to reach the actual tool. Paste a playlist URL,
+optionally change the output folder (this is a path *on the machine running
+the server*), and click **Download Playlist**. Logs stream live into the page (also printed
 to the terminal running `uvicorn`), with the same **Show full logs** checkbox,
 self-resetting progress bar, and optional **Log in with Spotify** /
 **Browse my playlists…** buttons as the desktop app.
