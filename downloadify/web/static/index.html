@@ -9,9 +9,26 @@
 <body>
   <main class="app">
     <header>
-      <h1>Downloadify</h1>
-      <p class="subtitle">Paste a public Spotify playlist link to download it as MP3s.</p>
+      <div class="header-text">
+        <h1>Downloadify</h1>
+        <p class="subtitle">Paste a public Spotify playlist link to download it as MP3s.</p>
+      </div>
+      <div class="spotify-login">
+        <p id="spotify-login-status">Not logged into Spotify</p>
+        <div class="spotify-login-actions">
+          <button id="spotify-login-btn" type="button" class="secondary-btn">Log in with Spotify</button>
+          <button id="browse-playlists-btn" type="button" class="secondary-btn" disabled>Browse my playlists…</button>
+        </div>
+      </div>
     </header>
+
+    <dialog id="playlist-picker-dialog">
+      <h3>Choose a playlist</h3>
+      <div id="playlist-picker-list" class="playlist-picker-list"></div>
+      <div class="playlist-picker-actions">
+        <button type="button" id="playlist-picker-cancel" class="secondary-btn">Cancel</button>
+      </div>
+    </dialog>
 
     <form id="download-form">
       <label for="playlist-url">Spotify playlist URL</label>

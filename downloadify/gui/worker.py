@@ -7,8 +7,10 @@ from pathlib import Path
 
 from PyQt6.QtCore import QThread, pyqtSignal
 
-from downloadify.core.models import PlaylistDownloadSummary, TrackResult
+from downloadify.core import spotify_auth
+from downloadify.core.models import PlaylistDownloadSummary, PlaylistSummary, TrackResult
 from downloadify.core.pipeline import DownloadPipeline
+from downloadify.core.spotify_client import SpotifyClient
 
 
 class DownloadWorker(QThread):
@@ -50,5 +52,36 @@ class DownloadWorker(QThread):
                 self.cancelled.emit(summary)
             else:
                 self.finished_ok.emit(summary)
+        except Exception as exc:  # noqa: BLE001 - report any failure to the UI
+            self.failed.emit(str(exc))
+
+
+class SpotifyLoginWorker(QThread):
+    """
+    Runs the blocking browser-based Spotify login (waits for the user to
+    finish logging in and Spotify to redirect back) off the UI thread.
+    """
+
+    succeeded = pyqtSignal()
+    failed = pyqtSignal(str)
+
+    def run(self) -> None:  # noqa: D102 - QThread override
+        try:
+            spotify_auth.login_interactive()
+            self.succeeded.emit()
+        except Exception as exc:  # noqa: BLE001 - report any failure to the UI
+            self.failed.emit(str(exc))
+
+
+class PlaylistListWorker(QThread):
+    """Lists the logged-in user's own Spotify playlists off the UI thread."""
+
+    succeeded = pyqtSignal(list)  # list[PlaylistSummary]
+    failed = pyqtSignal(str)
+
+    def run(self) -> None:  # noqa: D102 - QThread override
+        try:
+            playlists: list[PlaylistSummary] = SpotifyClient().list_my_playlists()
+            self.succeeded.emit(playlists)
         except Exception as exc:  # noqa: BLE001 - report any failure to the UI
             self.failed.emit(str(exc))

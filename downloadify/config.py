@@ -48,6 +48,38 @@ SPOTIFY_API_BASE = "https://api.spotify.com/v1"
 SPOTIFY_EMBED_URL = "https://open.spotify.com/embed/playlist/{playlist_id}"
 SPOTIFY_EMBED_TRACK_LIMIT = 100
 
+# The embed page doesn't report a playlist's true total, so truncation has
+# to be inferred from how many tracks it handed back. A raw page anywhere
+# near the observed ~100-track ceiling is treated as "might be truncated"
+# rather than requiring an exact match -- Spotify doesn't always fill the
+# page completely (e.g. region-unavailable tracks can be dropped from the
+# response), so a large playlist can land just under the cap while still
+# being incomplete. Better to warn/attempt an extension unnecessarily on a
+# rare edge case than to silently under-report a big playlist as "done".
+SPOTIFY_EMBED_TRUNCATION_THRESHOLD = 90
+
+# Optional user login (Authorization Code + PKCE -- no client secret needed).
+# This is the *only* way to read personalized/algorithmic playlists
+# (Discover Weekly, a Daily Mix, Release Radar, ...) or a user's own private
+# playlists, since those have no public, logged-out identity at all -- not
+# even Spotify's own official API can return them without the owning
+# account's login. Everything else (public, editorial, user-created
+# playlists) keeps working with zero login via the embed page above; this
+# is only used as a fallback when that reports a playlist it can't resolve.
+#
+# Uses the same SPOTIFY_CLIENT_ID configured above. The redirect URI below
+# must exactly match what's registered in the Spotify app's dashboard
+# (the README has both use the same http://127.0.0.1:8080 value).
+SPOTIFY_AUTHORIZE_URL = "https://accounts.spotify.com/authorize"
+SPOTIFY_REDIRECT_URI = "http://127.0.0.1:8080"
+SPOTIFY_REDIRECT_PORT = 8080
+SPOTIFY_AUTH_SCOPE = "playlist-read-private playlist-read-collaborative"
+
+# Where the login's refresh token is cached locally so the user only has to
+# log in once. Contains sensitive data -- never commit this file (it's in
+# .gitignore already).
+SPOTIFY_TOKEN_CACHE_PATH = PROJECT_ROOT / ".spotify_token_cache.json"
+
 # --------------------------------------------------------------------------
 # YouTube
 # --------------------------------------------------------------------------

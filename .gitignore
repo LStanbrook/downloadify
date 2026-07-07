@@ -8,6 +8,7 @@ env/
 
 # Environment secrets
 .env
+.spotify_token_cache.json
 
 # Downloaded content -- the app creates this folder itself on first run
 downloadify_downloads/

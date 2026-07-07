@@ -27,6 +27,19 @@ body {
   padding: 32px 20px 64px;
 }
 
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-text {
+  flex: 1;
+  min-width: 240px;
+}
+
 header h1 {
   margin: 0;
   color: var(--accent);
@@ -36,6 +49,99 @@ header h1 {
 .subtitle {
   color: var(--muted);
   margin-top: 4px;
+}
+
+.spotify-login {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+#spotify-login-status {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+.spotify-login-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.secondary-btn {
+  background: #262626;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondary-btn:hover:not(:disabled) {
+  background: #303030;
+}
+
+.secondary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+dialog#playlist-picker-dialog {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  width: min(480px, 90vw);
+}
+
+dialog#playlist-picker-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+dialog#playlist-picker-dialog h3 {
+  margin: 0 0 12px;
+}
+
+.playlist-picker-list {
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.playlist-picker-row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.playlist-picker-row:last-child {
+  border-bottom: none;
+}
+
+.playlist-picker-row:hover {
+  background: #262626;
+}
+
+.playlist-picker-row .track-count {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.playlist-picker-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 form {

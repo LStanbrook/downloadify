@@ -7,10 +7,15 @@ Exposes a tiny JSON API the static frontend (see `static/`) talks to:
 - GET  /api/jobs/{id}      current status snapshot (for polling/refresh)
 - GET  /api/jobs/{id}/events   live log/progress stream via Server-Sent Events
 - POST /api/jobs/{id}/cancel   ask a running job to stop
+- GET  /api/spotify/status     whether the optional Spotify login is active
+- POST /api/spotify/login      run the one-time browser login (blocks until done)
+- POST /api/spotify/logout     forget the cached login
+- GET  /api/spotify/my-playlists   the logged-in user's own playlist library
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 
 from fastapi import FastAPI, HTTPException
@@ -19,6 +24,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from downloadify import config
+from downloadify.core import spotify_auth
+from downloadify.core.spotify_client import SpotifyClient, SpotifyPlaylistError
 from downloadify.web.job_manager import TERMINAL_STATUSES, job_manager
 
 app = FastAPI(title="Downloadify", description="Spotify playlist -> MP3 downloader")
@@ -65,6 +72,63 @@ async def cancel_job(job_id: str) -> dict:
         raise HTTPException(status_code=404, detail="Unknown job id")
     job.cancel()
     return {"ok": True}
+
+
+@app.get("/api/spotify/status")
+async def spotify_status() -> dict:
+    return {"logged_in": spotify_auth.is_logged_in()}
+
+
+@app.post("/api/spotify/login")
+async def spotify_login() -> dict:
+    """
+    Runs the one-time browser-based Spotify login. This is only needed for
+    personalized playlists (Discover Weekly, a Daily Mix, ...) or a user's
+    own private playlists -- regular public playlists never need it.
+
+    Blocks the request until the user finishes logging in (or it times out),
+    since it needs to wait for Spotify's redirect either way.
+    """
+    if not config.SPOTIFY_CLIENT_ID:
+        raise HTTPException(
+            status_code=400,
+            detail="Set SPOTIFY_CLIENT_ID in your .env first -- see the README.",
+        )
+    try:
+        await asyncio.to_thread(spotify_auth.login_interactive)
+    except spotify_auth.SpotifyLoginError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"ok": True}
+
+
+@app.post("/api/spotify/logout")
+async def spotify_logout() -> dict:
+    spotify_auth.logout()
+    return {"ok": True}
+
+
+@app.get("/api/spotify/my-playlists")
+async def spotify_my_playlists() -> dict:
+    """
+    Lists the logged-in user's own playlist library -- lets a playlist that
+    doesn't resolve reliably by pasting its link be picked directly instead.
+    """
+    try:
+        playlists = await asyncio.to_thread(SpotifyClient().list_my_playlists)
+    except SpotifyPlaylistError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "playlists": [
+            {
+                "id": p.playlist_id,
+                "name": p.name,
+                "track_count": p.track_count,
+                "owner": p.owner,
+                "url": p.url,
+            }
+            for p in playlists
+        ]
+    }
 
 
 @app.get("/api/jobs/{job_id}/events")

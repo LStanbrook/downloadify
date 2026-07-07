@@ -40,6 +40,26 @@ class PlaylistInfo:
     # True only when the track list came from the zero-config embed-page
     # fallback and hit its ~100-track cap, so some tracks may be missing.
     possibly_truncated: bool = False
+    # How many raw entries the embed page actually returned before any were
+    # filtered out (e.g. unavailable/local tracks with no title). Used as
+    # the resume offset when extending past the cap -- `len(tracks)` isn't
+    # safe to use for that once filtering can make it diverge from Spotify's
+    # own notion of how many entries were already consumed.
+    embed_raw_count: int = 0
+
+
+@dataclass
+class PlaylistSummary:
+    """One entry in the logged-in user's own playlist library (see `SpotifyClient.list_my_playlists`)."""
+
+    playlist_id: str
+    name: str
+    track_count: int
+    owner: str = ""
+
+    @property
+    def url(self) -> str:
+        return f"https://open.spotify.com/playlist/{self.playlist_id}"
 
 
 class TrackStatus(str, Enum):

@@ -2,9 +2,9 @@
 
 Paste a **public Spotify playlist link**, and Downloadify will:
 
-1. Fetch every track (title + artist) from that playlist by reading Spotify's public embed page — no login, no API key, no OAuth flow.
+1. Fetch every track (title + artist) from that playlist by reading Spotify's public embed page — no login, no API key, no OAuth flow required for regular public playlists. (Personalized playlists like Discover Weekly and private playlists need one optional, one-time login — see below.)
 2. Search YouTube for `"artist - track name"` by scraping the public search results page (no YouTube Data API key).
-3. Take the first video result and download its audio with **yt-dlp**, converting it to **MP3**.
+3. Take the best-matching video result and download its audio with **yt-dlp**, converting it to **MP3**.
 4. Save everything to `downloadify_downloads/<playlist name>/<artist - track>.mp3`.
 
 It ships with two interchangeable front ends:
@@ -132,7 +132,9 @@ This opens a window with:
 - **Download Playlist** / **Cancel** buttons
 - A live progress bar (resets to empty once the run finishes) and scrolling log window
 - A **Show full logs** checkbox (see [Concise vs. full logs](#concise-vs-full-logs) below)
-- Error dialogs if something goes wrong (bad URL, private playlist, network errors, etc.)
+- A **Log in with Spotify** button in the top-right, only needed for personalized/private playlists (see [Personalized and private playlists](#personalized-and-private-playlists-optional-login))
+- A **Browse my playlists…** button (enabled once logged in) to pick a playlist from your own library instead of pasting a link
+- Error dialogs if something goes wrong (bad URL, playlist unreachable, network errors, etc.)
 
 ### Web app
 
@@ -144,8 +146,9 @@ python main.py --mode web
 Then open **http://127.0.0.1:8000** in a browser. Paste a playlist URL, optionally
 change the output folder (this is a path *on the machine running the server*),
 and click **Download Playlist**. Logs stream live into the page (also printed
-to the terminal running `uvicorn`), with the same **Show full logs** checkbox
-and self-resetting progress bar as the desktop app.
+to the terminal running `uvicorn`), with the same **Show full logs** checkbox,
+self-resetting progress bar, and optional **Log in with Spotify** /
+**Browse my playlists…** buttons as the desktop app.
 
 ### Concise vs. full logs
 
@@ -201,8 +204,22 @@ below for what was tried and ruled out.
 
 If you regularly work with large playlists, you can optionally add your own
 free Spotify API credentials. When set, Downloadify uses them *only* to fetch
-whatever tracks fall past the 100-track cap via the official, fully-paginated
-Spotify Web API — the embed page is still tried first either way.
+whatever tracks fall past the 100-track cap via the official Spotify Web API
+— the embed page is still tried first either way.
+
+**A caveat worth knowing**: Spotify has been progressively locking down what
+an app-only (Client Credentials) token can read -- its dedicated
+track-listing endpoint returns `401 Unauthorized` for Client Credentials on
+at least some playlists (confirmed by testing against a real editorial
+playlist). Because of this, if you're logged in (see
+[Personalized and private playlists](#personalized-and-private-playlists-optional-login)
+below), Downloadify prefers your login over the Client Credentials key for
+this extension, since testing confirmed it reliably reads far larger
+playlists (2500+ tracks) that the app-only key can't. If you're not logged
+in, it falls back to Client Credentials, which may or may not succeed
+depending on the playlist. Either way, this always degrades gracefully --
+worst case, you keep the first 100 tracks from the embed page rather than
+the app crashing.
 
 This takes about 2 minutes and is completely free — it does **not** give
 Downloadify (or anyone) access to your account, just to public catalog data:
@@ -213,8 +230,11 @@ Downloadify (or anyone) access to your account, just to public catalog data:
 3. Fill in the form:
    - **App name**: anything, e.g. `Downloadify`
    - **App description**: anything, e.g. `Personal playlist downloader`
-   - **Redirect URI**: required by the form but unused by Downloadify — enter
-     `http://127.0.0.1:8080` and click **Add**.
+   - **Redirect URI**: enter exactly `http://127.0.0.1:8080` and click **Add**.
+     This is used if you ever log in for a personalized/private playlist (see
+     [Personalized and private playlists](#personalized-and-private-playlists-optional-login)
+     below) — it must match exactly, but nothing is sent there unless you
+     click "Log in with Spotify" yourself.
    - Check the **Web API** checkbox under "Which API/SDKs are you planning to use?"
    - Agree to the terms and click **Save**.
 4. On the app's page, click **Settings**.
@@ -237,8 +257,59 @@ from their own machine. See
 [Publishing this app / letting many people use it](#publishing-this-app--letting-many-people-use-it)
 below for the reasoning.
 
-Only **public** playlists are supported (private/collaborative playlists
-aren't visible via either method).
+#### Personalized and private playlists (optional login)
+
+Regular public, editorial, and user-created playlists work with zero setup.
+But **personalized/algorithmic playlists** — Discover Weekly, a Daily Mix,
+Release Radar, and the like — are a fundamentally different case: they have
+no public identity at all. They're computed per Spotify account, and Spotify
+will not return them to anyone but the logged-in owner, official Web API
+included. The same is true of your own **private** playlists. There is no
+way around this short of logging in as that account.
+
+So Downloadify supports an optional, one-time login for exactly this case.
+It's never needed for a normal public playlist, and nothing about the
+default experience changes if you never use it. As a bonus, it also makes
+[extending past 100 tracks](#getting-full-playlists-over-100-tracks-optional)
+more reliable -- testing confirmed a logged-in account can fetch playlists
+thousands of tracks long, well beyond what the Client Credentials key alone
+could manage.
+
+1. Set up `SPOTIFY_CLIENT_ID` as described above (the login reuses it; no
+   client secret is needed for this part).
+2. Click **Log in with Spotify** (top-right in the desktop app, or in the
+   web app's header) and finish logging in in the browser tab that opens.
+3. Try the playlist link again, or click **Browse my playlists…** (enabled
+   once logged in) to pick straight from your own library instead of
+   pasting a link at all — this also doubles as a way to check whether a
+   given playlist is visible to the API at all before you try it.
+
+**Blend playlists are a known exception this can't fix.** Testing against a
+real account confirmed Blends don't appear in that account's own playlist
+library via the API, and a Blend link 404s from the official API even fully
+logged in as a participant. That looks like a deliberate Spotify platform
+restriction specific to Blends (a collaborative, multi-account feature),
+separate from -- and not fixed by -- the login above. Discover Weekly, Daily
+Mix, Release Radar, and genuinely private playlists are the cases logging in
+is meant to (and, per testing, does) solve.
+
+Behind the scenes this uses the OAuth **Authorization Code + PKCE** flow —
+the standard Spotify recommends for apps that can't keep a secret
+confidential, so no client secret is involved. A short-lived local server on
+`127.0.0.1:8080` (matching the Redirect URI above) catches Spotify's
+response, exchanges it for a token, and closes itself immediately after. The
+resulting login is cached in `.spotify_token_cache.json` (already
+`.gitignore`d) so you only have to do this once; click **Log out** (or
+delete that file) to forget it.
+
+**This is different from, and much narrower than, a "login wall."** It's
+scoped to read-only access to your own playlists (`playlist-read-private
+playlist-read-collaborative`), used only when a playlist specifically needs
+it, and — like the optional API key — it's per-user: each person sets this
+up with their own free Client ID, so it doesn't create a shared credential
+or a shared quota. See
+[Publishing this app](#publishing-this-app--letting-many-people-use-it)
+below for why that distinction matters if you're sharing this project.
 
 #### Why not the official Spotify API by default?
 
@@ -260,6 +331,12 @@ no-setup experience on a foundation that can quietly wall off a user for half
 a day, Downloadify only uses `api.spotify.com` as an opt-in, per-user
 enhancement — never as something the app depends on by default.
 
+The one exception is the login flow described above, and it's deliberately
+kept narrow: it only ever runs when a specific playlist can't be resolved
+any other way, not on every request the way the two rejected approaches
+above would have been, so it doesn't reproduce the same throttling risk at
+any meaningful scale.
+
 #### Publishing this app / letting many people use it
 
 If you're planning to put this on GitHub for others to download and run
@@ -274,21 +351,26 @@ knowing:
   violation of Spotify's Developer Terms on its own. This is exactly why the
   default path needs no key at all, and why the optional key above is
   something each user adds for themselves, not something you publish.
-- **A full Spotify login flow (like Exportify uses) was considered and isn't
-  recommended here.** New Spotify apps start in "Development Mode," which
-  caps *user-authorizing* apps (Authorization Code flow, i.e. "log in with
-  Spotify") at 25 distinct Spotify accounts unless Spotify approves an
-  Extended Quota Mode review. Given this app's purpose is downloading audio,
-  that review is a real risk of rejection, and either way it adds a login
-  step that the credential-free embed-page method makes unnecessary. It isn't
-  used here.
+- **The optional login (for personalized/private playlists) is scoped
+  per-user for the same reason.** New Spotify apps start in "Development
+  Mode," which caps *user-authorizing* apps (Authorization Code flow, i.e.
+  "log in with Spotify") at 25 distinct accounts under one Client ID unless
+  Spotify approves an Extended Quota Mode review. If everyone's copy of a
+  published app tried to log in through *your* Client ID, the 26th person to
+  try would simply be turned away by Spotify. Since each user already sets
+  up their own free Client ID for the 100+ track case, the login reuses that
+  same per-user app registration — each one only ever authorizes its own
+  owner, so the 25-account cap is never in play for anyone. Don't register
+  one Client ID yourself and have a published app share it for login; that's
+  the one setup that would actually hit this limit.
 - **YouTube requests already scale fine** — every user's copy of the app
   makes its own YouTube search/download requests from their own machine, so
   there's no shared quota to worry about there at all.
 
-Net effect: the app as shipped has no shared secret, no login wall, and no
+Net effect: the app as shipped has no shared secret, no shared login, and no
 single point that gets rate-limited as usage grows — the one tradeoff is the
-100-track cap on very large playlists unless a user opts into their own key.
+100-track cap (and personalized/private playlists) unless a user opts into
+their own free Client ID.
 
 ### YouTube search — no API key, with match filtering
 
@@ -330,6 +412,12 @@ If a download fails (most commonly a transient `HTTP 403` from YouTube, which
 tends to clear up on its own), Downloadify automatically retries that track
 once more a couple of seconds later before giving up and marking it failed.
 
+If a playlist contains the same track twice (or two different tracks that
+happen to share an identical "Artist - Title"), the later one is saved as
+`<Artist> - <Track> (2).mp3` rather than silently overwriting the first --
+otherwise the reported success count wouldn't match the number of files
+actually on disk.
+
 ---
 
 ## 5. Troubleshooting
@@ -338,12 +426,15 @@ once more a couple of seconds later before giving up and marking it failed.
 |---|---|
 | "That doesn't look like a public Spotify playlist link" | Make sure the URL looks like `https://open.spotify.com/playlist/<id>`. |
 | "Playlist not found" / "Spotify refused access" | The playlist is private, deleted, or region-locked. Only public playlists work. |
-| "Spotify says this playlist doesn't exist for a logged-out visitor" | This is almost always a **personalized/algorithmic playlist** -- Discover Weekly, a Daily Mix, Release Radar, etc. These are generated per Spotify account and have no fixed public identity, so they simply can't be read without logging in as their owner, which Downloadify deliberately never does. Public, user-created or editorial playlists (the kind you can share a link to and anyone can open) work fine. |
+| "This looks like a personalized playlist... Log in with Spotify and try again" | Discover Weekly, a Daily Mix, Release Radar, or a private playlist -- these have no public identity, so Spotify only returns them to their logged-in owner. Set `SPOTIFY_CLIENT_ID` in `.env` and click **Log in with Spotify**, then try again -- see [Personalized and private playlists](#personalized-and-private-playlists-optional-login). |
+| "Set SPOTIFY_CLIENT_ID in your .env before logging in" | The login button needs a Client ID first (no secret required for this part) -- see [Getting full playlists over 100 tracks](#getting-full-playlists-over-100-tracks-optional) for how to get one free. |
+| "Couldn't start the local login listener on port 8080" | Something else on your machine is already using port 8080. Close it and try logging in again. |
 | "Could not read/parse playlist data from Spotify" | Spotify's embed page layout may have changed, or a network issue occurred. Check your internet connection; if it persists, the embed page's HTML structure may need updating in `spotify_client.py`. |
 | "Note: Spotify's no-login embed page only exposes the first 100 tracks..." | Informational only — this playlist has over 100 tracks. Set up your own free `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` (see above) to fetch the rest. |
 | "ffprobe and ffmpeg not found" / "yt-dlp finished but no output file was found" | ffmpeg isn't on `PATH` for the process running Downloadify. If you just installed it, fully close and reopen your terminal/VS Code (a new tab isn't enough). If that's not convenient right now, set `FFMPEG_LOCATION` in `.env` to ffmpeg's folder instead — see [Prerequisites](#ffmpeg-required--yt-dlp-needs-it-to-produce-mp3s). |
 | "No confident match found on YouTube -- skipped" | Downloadify deliberately didn't download anything for this track because none of the top 5 YouTube results looked like a confident match (see [YouTube search — match filtering](#youtube-search--no-api-key-with-match-filtering)). Usually happens with obscure tracks, unusual title formatting, or remixes. |
 | "unable to download video data: HTTP Error 403: Forbidden" (still fails after retrying) | Usually a transient YouTube throttle -- Downloadify already retries once automatically. If it keeps happening across many tracks, try again in a few minutes, or update yt-dlp (`pip install -U yt-dlp`), since YouTube periodically changes things in ways that need a newer version. |
+| Reported "X/X downloaded successfully" but fewer files than X are in the folder | The playlist has the same track listed more than once (or two tracks that share an identical "Artist - Title"). Downloadify names the repeat `<Artist> - <Track> (2).mp3` so it doesn't overwrite the first -- check the folder for `(2)`/`(3)` files before assuming something's missing. |
 | Some tracks fail while most succeed | Usually a YouTube search returning no confident match, or a video being region-locked/removed/403'd even after the automatic retry. Check the log window (enable **Show full logs**) for the specific error per track. |
 | GUI window doesn't open | Make sure `PyQt6` installed correctly (`pip install PyQt6`); on some Linux distros you may need system Qt libraries. |
 
@@ -357,3 +448,27 @@ once more a couple of seconds later before giving up and marking it failed.
   `on_track_done`), which the GUI turns into Qt signals and the web app turns
   into Server-Sent Events.
 - No YouTube or Spotify API keys are stored or required anywhere in this repo.
+- The optional Spotify login lives in `downloadify/core/spotify_auth.py`,
+  isolated from the rest of `spotify_client.py` -- it's only ever invoked
+  from the one fallback path for personalized/private playlists, and the
+  GUI/web layers only call `is_logged_in()` / `login_interactive()` /
+  `logout()`, never touching tokens directly. Its cache file
+  (`.spotify_token_cache.json`, gitignored) holds a real refresh token --
+  treat it like a credential, same as `.env`.
+- **Spotify's playlist-object field naming changed at some point after this
+  app's initial development**: what the API docs call `tracks` (both the
+  `/v1/playlists/{id}` field and its `/tracks` sub-endpoint, plus each
+  entry's own `track` field) now only works under the name `items`
+  (`/v1/playlists/{id}/items`, `items.items(item(...))`) -- the old names
+  now 404/403. This was only caught by testing against a real logged-in
+  account; if Spotify's API behaves unexpectedly again in the future,
+  re-verifying current field names live (not just trusting cached
+  documentation) is the fastest way to find out why.
+- The embed page's track count can land anywhere close to, but under, its
+  ~100-track cap (some entries can be missing a title -- unavailable/local
+  tracks -- and get filtered out of `PlaylistInfo.tracks`). `possibly_truncated`
+  and the extension's resume offset are deliberately computed from the *raw*
+  page size (`PlaylistInfo.embed_raw_count`), not `len(tracks)` -- using the
+  filtered count for either silently under-reports large playlists or skips/
+  reprocesses tracks when extending past the cap. If you're touching
+  `spotify_client.py`, keep that distinction intact.

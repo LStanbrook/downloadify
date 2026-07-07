@@ -49,6 +49,25 @@ class PipelineCancelled(Exception):
     """Raised internally when a cancellation is requested mid-run."""
 
 
+def _assign_unique_filenames(tracks: list[Track]) -> dict[int, str]:
+    """
+    Map each track (keyed by `id()`, valid only for the lifetime of this
+    `tracks` list) to a filesystem-safe filename base that's unique within
+    the playlist. Playlists can legitimately contain the same track twice,
+    or two different tracks whose "Artist - Title" happens to match -- left
+    alone, both would resolve to the same output path and the second
+    download would silently overwrite the first on disk.
+    """
+    seen_counts: dict[str, int] = {}
+    filenames: dict[int, str] = {}
+    for track in tracks:
+        base = sanitize_filename(track.display_name)
+        occurrence = seen_counts.get(base, 0) + 1
+        seen_counts[base] = occurrence
+        filenames[id(track)] = base if occurrence == 1 else f"{base} ({occurrence})"
+    return filenames
+
+
 class DownloadPipeline:
     """Runs the Spotify -> YouTube -> yt-dlp flow for an entire playlist."""
 
@@ -118,10 +137,18 @@ class DownloadPipeline:
         total = len(playlist.tracks)
         self._on_progress(0, total)
 
+        # Two different tracks (or the same track listed twice) can share
+        # the same "Artist - Title" name -- assigned up front, by playlist
+        # order, so a later duplicate gets " (2)" appended rather than
+        # silently overwriting the earlier track's file on disk.
+        filenames_by_track = _assign_unique_filenames(playlist.tracks)
+
         semaphore = asyncio.Semaphore(self._max_concurrent)
         tasks = [
             asyncio.create_task(
-                self._process_track(track, playlist_folder, semaphore, total)
+                self._process_track(
+                    track, filenames_by_track[id(track)], playlist_folder, semaphore, total
+                )
             )
             for track in playlist.tracks
         ]
@@ -150,6 +177,7 @@ class DownloadPipeline:
     async def _process_track(
         self,
         track: Track,
+        filename_base: str,
         playlist_folder: Path,
         semaphore: asyncio.Semaphore,
         total: int,
@@ -161,8 +189,6 @@ class DownloadPipeline:
                 )
                 self._on_track_done(result)
                 return result
-
-            filename_base = sanitize_filename(track.display_name)
 
             try:
                 self._log(f"Searching YouTube for: {track.search_query}", verbose=True)

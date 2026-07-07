@@ -10,6 +10,7 @@ from PyQt6.QtGui import QTextCursor
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
+    QDialog,
     QFileDialog,
     QFrame,
     QHBoxLayout,
@@ -28,8 +29,10 @@ from PyQt6.QtWidgets import (
 )
 
 from downloadify import config
-from downloadify.core.models import PlaylistDownloadSummary, TrackResult, TrackStatus
-from downloadify.gui.worker import DownloadWorker
+from downloadify.core import spotify_auth
+from downloadify.core.models import PlaylistDownloadSummary, PlaylistSummary, TrackResult, TrackStatus
+from downloadify.gui.playlist_picker import PlaylistPickerDialog
+from downloadify.gui.worker import DownloadWorker, PlaylistListWorker, SpotifyLoginWorker
 
 _STYLESHEET_PATH = Path(__file__).resolve().parent / "style.qss"
 
@@ -48,8 +51,11 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(780, 580)
 
         self._worker: DownloadWorker | None = None
+        self._login_worker: SpotifyLoginWorker | None = None
+        self._playlist_list_worker: PlaylistListWorker | None = None
 
         self._build_ui()
+        self._update_login_state()
 
     # -- UI construction ---------------------------------------------------
 
@@ -75,17 +81,37 @@ class MainWindow(QMainWindow):
         splitter.setSizes([360, 500])
         root.addWidget(splitter, stretch=1)
 
-    def _build_header(self) -> QVBoxLayout:
-        header = QVBoxLayout()
-        header.setSpacing(6)
+    def _build_header(self) -> QHBoxLayout:
+        header = QHBoxLayout()
 
+        text_col = QVBoxLayout()
+        text_col.setSpacing(6)
         title = QLabel("Downloadify")
         title.setObjectName("HeaderTitle")
-        header.addWidget(title)
-
+        text_col.addWidget(title)
         subtitle = QLabel("Paste a public Spotify playlist link to download it as MP3s.")
         subtitle.setObjectName("HeaderSubtitle")
-        header.addWidget(subtitle)
+        text_col.addWidget(subtitle)
+        header.addLayout(text_col)
+
+        header.addStretch(1)
+
+        login_col = QVBoxLayout()
+        login_col.setSpacing(8)
+        login_col.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
+        self.spotify_login_status = QLabel()
+        self.spotify_login_status.setObjectName("HeaderSubtitle")
+        self.spotify_login_status.setAlignment(Qt.AlignmentFlag.AlignRight)
+        login_col.addWidget(self.spotify_login_status)
+        self.spotify_login_btn = QPushButton()
+        self.spotify_login_btn.setObjectName("browseButton")
+        self.spotify_login_btn.clicked.connect(self._on_spotify_login_clicked)
+        login_col.addWidget(self.spotify_login_btn)
+        self.browse_playlists_btn = QPushButton("Browse my playlists…")
+        self.browse_playlists_btn.setObjectName("browseButton")
+        self.browse_playlists_btn.clicked.connect(self._on_browse_playlists_clicked)
+        login_col.addWidget(self.browse_playlists_btn)
+        header.addLayout(login_col)
 
         return header
 
@@ -190,6 +216,68 @@ class MainWindow(QMainWindow):
         )
         if folder:
             self.folder_input.setText(folder)
+
+    def _update_login_state(self) -> None:
+        logged_in = spotify_auth.is_logged_in()
+        self.spotify_login_status.setText(
+            "Logged into Spotify" if logged_in else "Not logged into Spotify"
+        )
+        self.spotify_login_btn.setText("Log out" if logged_in else "Log in with Spotify")
+        self.spotify_login_btn.setEnabled(True)
+        self.browse_playlists_btn.setEnabled(logged_in)
+
+    def _on_spotify_login_clicked(self) -> None:
+        if spotify_auth.is_logged_in():
+            spotify_auth.logout()
+            self._update_login_state()
+            return
+
+        if not config.SPOTIFY_CLIENT_ID:
+            QMessageBox.warning(
+                self,
+                "Spotify login unavailable",
+                "Set SPOTIFY_CLIENT_ID in your .env first -- this is the same "
+                "free key used for large playlists. See the README for how "
+                "to get one (no login of your own needed to create it).",
+            )
+            return
+
+        self.spotify_login_btn.setEnabled(False)
+        self.spotify_login_status.setText("Waiting for login in your browser…")
+
+        self._login_worker = SpotifyLoginWorker()
+        self._login_worker.succeeded.connect(self._on_login_succeeded)
+        self._login_worker.failed.connect(self._on_login_failed)
+        self._login_worker.start()
+
+    def _on_login_succeeded(self) -> None:
+        self._update_login_state()
+
+    def _on_login_failed(self, error_message: str) -> None:
+        self._update_login_state()
+        QMessageBox.warning(self, "Spotify login failed", error_message)
+
+    def _on_browse_playlists_clicked(self) -> None:
+        self.browse_playlists_btn.setEnabled(False)
+        self.browse_playlists_btn.setText("Loading…")
+
+        self._playlist_list_worker = PlaylistListWorker()
+        self._playlist_list_worker.succeeded.connect(self._on_playlists_listed)
+        self._playlist_list_worker.failed.connect(self._on_playlists_list_failed)
+        self._playlist_list_worker.start()
+
+    def _on_playlists_listed(self, playlists: list[PlaylistSummary]) -> None:
+        self.browse_playlists_btn.setText("Browse my playlists…")
+        self.browse_playlists_btn.setEnabled(True)
+
+        dialog = PlaylistPickerDialog(playlists, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.selected_playlist:
+            self.url_input.setText(dialog.selected_playlist.url)
+
+    def _on_playlists_list_failed(self, error_message: str) -> None:
+        self.browse_playlists_btn.setText("Browse my playlists…")
+        self.browse_playlists_btn.setEnabled(True)
+        QMessageBox.warning(self, "Couldn't list playlists", error_message)
 
     def _append_log(self, message: str) -> None:
         self.log_view.appendPlainText(message)
