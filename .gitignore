@@ -2,9 +2,16 @@
 __pycache__/
 *.pyc
 .venv/
+.venv_build/
 venv/
 env/
 *.egg-info/
+
+# PyInstaller build output -- rebuild with build_exe.ps1 rather than
+# committing the ~100MB binary; see that script for the exact command.
+build/
+dist/
+*.spec
 
 # Environment secrets
 .env
