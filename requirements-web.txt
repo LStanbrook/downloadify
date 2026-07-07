@@ -1,0 +1,12 @@
+# Dependencies for the hosted web app only (see Dockerfile) -- deliberately
+# excludes PyQt6 (the desktop GUI), which needs system X11/Qt libraries that
+# a minimal web container doesn't have and doesn't need. For running
+# Downloadify from source, including the desktop GUI, use requirements.txt
+# instead.
+requests>=2.31.0
+python-dotenv>=1.0.1
+yt-dlp>=2024.4.9
+
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.6.0

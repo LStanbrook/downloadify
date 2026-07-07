@@ -22,6 +22,9 @@ Both call into the same core pipeline, so behavior is identical either way.
 downloadify/
 ├── main.py                     # Entrypoint: `python main.py --mode gui|web`
 ├── requirements.txt
+├── requirements-web.txt         # Web-only deps for the hosted deployment (no PyQt6)
+├── Dockerfile                    # Builds the hosted web app (see render.yaml)
+├── render.yaml                   # Render Blueprint -- one-click hosted deployment
 ├── .env.example                 # Optional per-user Spotify credentials (playlists over 100 tracks)
 ├── downloadify/
 │   ├── config.py                 # Paths, constants, .env loading
@@ -149,6 +152,55 @@ and click **Download Playlist**. Logs stream live into the page (also printed
 to the terminal running `uvicorn`), with the same **Show full logs** checkbox,
 self-resetting progress bar, and optional **Log in with Spotify** /
 **Browse my playlists…** buttons as the desktop app.
+
+#### Hosting it publicly, for other people to use
+
+Running `python main.py --mode web` as above is meant for **one person on
+their own machine** — the output folder is a real filesystem path and the
+optional Spotify login is a single, shared login for whoever's running it.
+Neither is safe to expose to strangers on a shared, public server as-is.
+
+Setting the `PUBLIC_DEPLOYMENT=true` environment variable switches the same
+app into a **public mode** built for exactly that instead:
+
+- The output-folder field is removed. Every job writes into its own
+  server-generated temp folder — a client can never influence where files
+  are written (closes a path-traversal hole a raw client-supplied path
+  would otherwise open).
+- Finished downloads are zipped and served as a **Download ZIP** button in
+  the browser, instead of being left in a folder on the server.
+- A job's files are deleted automatically `PUBLIC_JOB_TTL_SECONDS` (default
+  3600) after it finishes, so disk usage on a shared host stays bounded.
+- No more than `PUBLIC_MAX_CONCURRENT_JOBS` (default 3) playlists download
+  at once, server-wide — anyone else gets a clear "try again in a minute"
+  instead of the server being overwhelmed.
+- The Spotify login and "Browse my playlists…" endpoints aren't registered
+  at all — routing a stranger's own Spotify session through infrastructure
+  you control is a meaningfully bigger trust ask than a login that never
+  leaves their own machine, so public mode simply doesn't offer it. Regular
+  public playlists work exactly as normal.
+
+**Deploying to [Render](https://render.com) (recommended — free tier available):**
+
+1. Push this repo to your own GitHub account (or fork it).
+2. In the [Render dashboard](https://dashboard.render.com), click
+   **New +** → **Blueprint**, and point it at your repo. Render reads
+   [`render.yaml`](render.yaml) in the repo root and configures everything
+   automatically (Docker build, port, `PUBLIC_DEPLOYMENT=true`, and the
+   other settings above) — no manual setup needed.
+3. Click **Apply**. The first build takes a few minutes (installing ffmpeg
+   + Python deps into the image); Render gives you a
+   `https://<service-name>.onrender.com` URL once it's live.
+
+Free-tier Render services sleep after 15 minutes of inactivity, so the first
+request after a quiet period takes 30-60 seconds to spin back up — normal,
+not a bug.
+
+This also works on any other host that can run a Dockerfile (Railway,
+Fly.io, a VPS, ...) — build [`Dockerfile`](Dockerfile) and set the same
+environment variables shown in `render.yaml`. The image excludes the desktop
+GUI's dependencies (see `requirements-web.txt`) since a headless container
+has no display for PyQt6 to attach to.
 
 ### Concise vs. full logs
 

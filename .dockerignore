@@ -1,0 +1,17 @@
+.venv/
+.venv_build/
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+downloadify_downloads/
+.env
+.spotify_token_cache.json
+website/
+.git/
+.gitignore
+README.md
+build_exe.ps1
+desktop_entry.py
+requirements.txt

@@ -1,0 +1,17 @@
+# Render Blueprint -- lets Downloadify be deployed with "New +" -> "Blueprint"
+# on https://dashboard.render.com, pointed at this repo, with no manual
+# service configuration needed. See README for the full walkthrough.
+services:
+  - type: web
+    name: downloadify
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/config
+    envVars:
+      - key: PUBLIC_DEPLOYMENT
+        value: "true"
+      - key: PUBLIC_MAX_CONCURRENT_JOBS
+        value: "3"
+      - key: PUBLIC_JOB_TTL_SECONDS
+        value: "3600"

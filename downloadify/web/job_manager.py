@@ -20,12 +20,14 @@ position independently.
 from __future__ import annotations
 
 import asyncio
+import shutil
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from downloadify import config
 from downloadify.core.models import PlaylistDownloadSummary, TrackResult
 from downloadify.core.pipeline import DownloadPipeline
 
@@ -53,8 +55,10 @@ class Job:
     error: str | None = None
     summary: PlaylistDownloadSummary | None = None
     new_event: asyncio.Event = field(default_factory=asyncio.Event)
+    zip_path: Path | None = field(default=None, repr=False)
     _pipeline: DownloadPipeline | None = field(default=None, repr=False)
     _task: asyncio.Task | None = field(default=None, repr=False)
+    _zip_lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False)
 
     def cancel(self) -> None:
         if self._pipeline:
@@ -82,6 +86,33 @@ class JobManager:
 
     def get_job(self, job_id: str) -> Job | None:
         return self._jobs.get(job_id)
+
+    def running_count(self) -> int:
+        """How many jobs are currently downloading -- used to cap concurrent jobs in public mode."""
+        return sum(1 for job in self._jobs.values() if job.status == JobStatus.RUNNING)
+
+    async def get_or_build_zip(self, job: Job) -> Path:
+        """
+        Zip a finished job's output folder on first request, caching the
+        result so repeat/parallel requests for the same job reuse it rather
+        than re-zipping (or racing to build it concurrently).
+        """
+        async with job._zip_lock:
+            if job.zip_path and job.zip_path.exists():
+                return job.zip_path
+            if not job.summary:
+                raise ValueError("Job has no output to zip yet")
+            playlist_folder = Path(job.summary.output_folder)
+            archive_base = playlist_folder.parent / "download"
+            built = await asyncio.to_thread(
+                shutil.make_archive,
+                str(archive_base),
+                "zip",
+                str(playlist_folder.parent),
+                playlist_folder.name,
+            )
+            job.zip_path = Path(built)
+            return job.zip_path
 
     def start_job(self, job: Job) -> None:
         pipeline = DownloadPipeline(
@@ -122,6 +153,20 @@ class JobManager:
             job.error = str(exc)
             self._push(job, {"type": "error", "message": str(exc)})
             job.status = JobStatus.FAILED
+        finally:
+            if config.PUBLIC_DEPLOYMENT:
+                asyncio.create_task(self._cleanup_after_delay(job))
+
+    async def _cleanup_after_delay(self, job: Job) -> None:
+        """
+        Deletes a public-mode job's temp folder (source files + any built
+        zip) after PUBLIC_JOB_TTL_SECONDS, bounding disk usage on a shared
+        host. The delay gives the visitor a real window to click "Download
+        ZIP" before their files disappear.
+        """
+        await asyncio.sleep(config.PUBLIC_JOB_TTL_SECONDS)
+        job_dir = config.PUBLIC_JOBS_DIR / job.id
+        await asyncio.to_thread(shutil.rmtree, job_dir, True)
 
     def _push(self, job: Job, event: dict[str, Any]) -> None:
         if event.get("type") == "progress":

@@ -9,18 +9,29 @@ in more than one place.
 from __future__ import annotations
 
 import os
+import sys
+import tempfile
 from pathlib import Path
 
 from dotenv import load_dotenv
-
-# Load a .env file if present (safe no-op if it doesn't exist).
-load_dotenv()
 
 # --------------------------------------------------------------------------
 # Paths
 # --------------------------------------------------------------------------
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if getattr(sys, "frozen", False):
+    # Running as a packaged executable (PyInstaller). `__file__` would
+    # resolve inside the one-file build's temporary extraction directory,
+    # which is wiped when the app closes -- downloads and the login token
+    # cache need to live next to the actual .exe instead, so they persist.
+    PROJECT_ROOT = Path(sys.executable).resolve().parent
+else:
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Load a .env file if present (safe no-op if it doesn't exist). Pointed
+# explicitly at PROJECT_ROOT when packaged, since the frozen exe's working
+# directory isn't guaranteed to be where the user placed `.env`.
+load_dotenv(PROJECT_ROOT / ".env" if getattr(sys, "frozen", False) else None)
 
 # Default root folder where "<playlist_name>/<artist - track>.mp3" trees go.
 DEFAULT_DOWNLOAD_DIR = PROJECT_ROOT / "downloadify_downloads"
@@ -125,3 +136,32 @@ FFMPEG_LOCATION = os.getenv("FFMPEG_LOCATION", "").strip()
 # heavy, and hammering YouTube with too many concurrent requests increases
 # the odds of getting throttled, so a small number is deliberately used.
 MAX_CONCURRENT_DOWNLOADS = 3
+
+# --------------------------------------------------------------------------
+# Public web deployment
+# --------------------------------------------------------------------------
+
+# When true, the web app runs in "public mode" -- one server shared by every
+# visitor rather than a single local user. Several things that are fine for
+# a lone local user become unsafe or meaningless at that point, so this flag
+# gates them off: a client-supplied output path (path traversal), the
+# Spotify login (would route strangers' own Spotify sessions through
+# infrastructure the operator controls), and unbounded concurrent jobs
+# (resource exhaustion) are all disabled, and finished downloads are zipped
+# and streamed back to the browser instead of saved to a folder on the
+# server. Set via the PUBLIC_DEPLOYMENT env var on the hosted deployment
+# only -- never set for local/desktop use.
+PUBLIC_DEPLOYMENT = os.getenv("PUBLIC_DEPLOYMENT", "").strip().lower() in ("1", "true", "yes")
+
+# Root folder for per-job temp directories, used only in public mode.
+PUBLIC_JOBS_DIR = Path(
+    os.getenv("PUBLIC_JOBS_DIR", "").strip() or str(Path(tempfile.gettempdir()) / "downloadify_jobs")
+)
+
+# How many playlist downloads may run at once, server-wide, in public mode.
+PUBLIC_MAX_CONCURRENT_JOBS = int(os.getenv("PUBLIC_MAX_CONCURRENT_JOBS", "3"))
+
+# How long a finished job's files stay on disk before being deleted, in
+# public mode -- bounds disk usage on a shared host without racing a visitor
+# who's mid-download.
+PUBLIC_JOB_TTL_SECONDS = int(os.getenv("PUBLIC_JOB_TTL_SECONDS", str(60 * 60)))

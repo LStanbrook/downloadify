@@ -17,10 +17,35 @@ const browsePlaylistsBtn = document.getElementById("browse-playlists-btn");
 const playlistPickerDialog = document.getElementById("playlist-picker-dialog");
 const playlistPickerList = document.getElementById("playlist-picker-list");
 const playlistPickerCancel = document.getElementById("playlist-picker-cancel");
+const downloadZipLink = document.getElementById("download-zip-link");
 
 let currentJobId = null;
 let eventSource = null;
 let spotifyLoggedIn = false;
+let publicDeployment = false;
+
+// On a public hosted deployment, the server runs for many visitors at once,
+// so the Spotify login and the "pick your own server-side output folder"
+// field don't make sense there (see server.py's PUBLIC_DEPLOYMENT gating) --
+// hide them and swap in a "Download ZIP" button once a job finishes instead.
+async function loadClientConfig() {
+  try {
+    const resp = await fetch("/api/config");
+    const data = await resp.json();
+    publicDeployment = Boolean(data.public_deployment);
+  } catch {
+    publicDeployment = false;
+  }
+  if (publicDeployment) {
+    document.getElementById("spotify-login-section").style.display = "none";
+    document.getElementById("output-dir-field").style.display = "none";
+    const lead = document.getElementById("fine-print-lead");
+    if (lead) {
+      lead.textContent =
+        "Downloads run on a shared server and are deleted about an hour after they finish — grab your ZIP promptly.";
+    }
+  }
+}
 
 function appendLog(line) {
   logView.textContent += line + "\n";
@@ -52,6 +77,15 @@ function setStatus(text, statusClass) {
   }
 }
 
+function showResult(jobId, data) {
+  if (publicDeployment && data.succeeded > 0) {
+    downloadZipLink.href = `/api/jobs/${jobId}/download`;
+    downloadZipLink.style.display = "inline-block";
+  } else if (!publicDeployment) {
+    appendLog(`Saved to: ${data.output_folder}`);
+  }
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -60,6 +94,7 @@ form.addEventListener("submit", async (event) => {
 
   logView.textContent = "";
   progressFill.style.width = "0%";
+  downloadZipLink.style.display = "none";
   setStatus("Starting...");
   setRunning(true);
 
@@ -121,7 +156,7 @@ function streamJob(jobId) {
       }
       case "done":
         setStatus(`Finished: ${data.succeeded}/${data.total} downloaded.`, "status-success");
-        appendLog(`Saved to: ${data.output_folder}`);
+        showResult(jobId, data);
         setRunning(false);
         resetProgress();
         break;
@@ -130,7 +165,7 @@ function streamJob(jobId) {
           `Cancelled: ${data.succeeded}/${data.total} downloaded before stopping.`,
           "status-warning"
         );
-        appendLog(`Saved to: ${data.output_folder}`);
+        showResult(jobId, data);
         setRunning(false);
         resetProgress();
         break;
@@ -205,7 +240,12 @@ spotifyLoginBtn.addEventListener("click", async () => {
   }
 });
 
-refreshSpotifyLoginStatus();
+(async () => {
+  await loadClientConfig();
+  if (!publicDeployment) {
+    refreshSpotifyLoginStatus();
+  }
+})();
 
 // Lets a playlist be chosen from the logged-in user's own library instead
 // of pasting a link -- useful for playlists that don't resolve reliably by
