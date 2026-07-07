@@ -109,7 +109,11 @@ REQUEST_TIMEOUT_SECONDS = 15
 # --------------------------------------------------------------------------
 
 AUDIO_FORMAT = "mp3"
-AUDIO_QUALITY_KBPS = "192"
+# YouTube's own source audio tops out well below this (typically ~128-160kbps
+# Opus/AAC), so this doesn't add fidelity that wasn't there to begin with --
+# but encoding at 320 rather than a lower target avoids throwing away any
+# more of it than YouTube's own compression already did.
+AUDIO_QUALITY_KBPS = "320"
 
 # Optional explicit folder containing ffmpeg/ffprobe. Only needed if yt-dlp
 # reports "ffprobe and ffmpeg not found" despite ffmpeg being installed --

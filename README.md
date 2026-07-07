@@ -402,8 +402,14 @@ wrong song.
 The resulting `https://www.youtube.com/watch?v=...` URL is handed to
 **yt-dlp** (used as a Python library), which downloads the best available
 audio stream and uses its `FFmpegExtractAudio` postprocessor to convert it to
-a 192kbps MP3 named `<Artist> - <Track>.mp3` inside
-`downloadify_downloads/<Playlist Name>/`.
+a 320kbps MP3 (`config.AUDIO_QUALITY_KBPS`) named `<Artist> - <Track>.mp3`
+inside `downloadify_downloads/<Playlist Name>/`.
+
+Worth knowing: YouTube's own source audio is itself compressed, typically
+around 128-160kbps Opus/AAC, so encoding at 320kbps doesn't add fidelity
+that was never there -- but it does avoid throwing away any *more* of it
+than YouTube's own compression already did, which a lower target bitrate
+would.
 
 Up to 3 tracks are processed concurrently (via `asyncio`) to keep things fast
 without hammering YouTube.
