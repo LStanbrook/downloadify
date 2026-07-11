@@ -203,11 +203,11 @@ def _sse_event(payload: dict) -> str:
     return f"data: {json.dumps(payload)}\n\n"
 
 
-# The actual download tool lives at /app (index.html, style.css, app.js);
-# the site root serves the marketing homepage instead, which links to /app.
-# Order matters here -- Starlette checks mounts in registration order, so
-# "/app" has to be registered before the catch-all "/" mount or every
-# request would be swallowed by the root mount first.
-static_root = config.PROJECT_ROOT / "downloadify" / "web" / "static"
-app.mount("/app", StaticFiles(directory=str(static_root / "app"), html=True), name="app-static")
-app.mount("/", StaticFiles(directory=str(static_root), html=True), name="static")
+# Serve the frontend (index.html, app.js) as static files, with index.html
+# at the site root -- it's both the marketing homepage and the download
+# tool (embedded in the "Try it right now" section) in one page.
+app.mount(
+    "/",
+    StaticFiles(directory=str(config.PROJECT_ROOT / "downloadify" / "web" / "static"), html=True),
+    name="static",
+)

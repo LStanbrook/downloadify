@@ -601,6 +601,284 @@
     outline: 2px solid var(--signal);
     outline-offset: 2px;
   }
+
+  /* ---------- embedded tool ---------- */
+
+  .tool {
+    max-width: 640px;
+  }
+
+  .tool-login {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+
+  .spotify-login {
+    text-align: right;
+  }
+
+  #spotify-login-status {
+    color: var(--mist);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    margin: 0 0 10px;
+  }
+
+  .spotify-login-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .secondary-btn {
+    background: var(--surface-high);
+    color: var(--paper);
+    border: 1px solid var(--line);
+    padding: 9px 15px;
+    border-radius: 3px;
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .secondary-btn:hover:not(:disabled) {
+    border-color: var(--mist);
+  }
+
+  .secondary-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    margin-bottom: 36px;
+  }
+
+  .card label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mist);
+    margin-bottom: 8px;
+    margin-top: 20px;
+  }
+
+  .card label:first-of-type {
+    margin-top: 0;
+  }
+
+  .card input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-body);
+    font-size: 14.5px;
+  }
+
+  .card input[type="text"]::placeholder {
+    color: #55655d;
+  }
+
+  .card input[type="text"]:focus {
+    outline: none;
+    border-color: var(--signal);
+  }
+
+  .tool .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .tool .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .tool .actions .btn-primary {
+    flex: 1;
+  }
+
+  .progress-section {
+    margin-top: 24px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 34px;
+    background: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--signal);
+    transition: width 0.3s ease;
+  }
+
+  #status-text {
+    color: var(--mist);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin: 10px 0 0;
+  }
+
+  #status-text.status-success {
+    color: var(--signal);
+    font-weight: 600;
+  }
+
+  #status-text.status-warning {
+    color: #e0a030;
+    font-weight: 600;
+  }
+
+  #status-text.status-error {
+    color: var(--danger);
+    font-weight: 600;
+  }
+
+  .download-zip-link {
+    display: none;
+    margin-top: 14px;
+  }
+
+  .log-section {
+    margin-bottom: 8px;
+  }
+
+  .log-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .log-heading {
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--paper);
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--mist);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .checkbox-label input {
+    accent-color: var(--signal);
+    cursor: pointer;
+  }
+
+  #log-view {
+    margin: 0;
+    padding: 16px;
+    height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 12.5px;
+    line-height: 1.7;
+  }
+
+  dialog#playlist-picker-dialog {
+    background: var(--surface);
+    color: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px;
+    width: min(460px, 90vw);
+    font-family: var(--font-body);
+  }
+
+  dialog#playlist-picker-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.65);
+  }
+
+  dialog#playlist-picker-dialog h3 {
+    margin: 0 0 14px;
+    font-family: var(--font-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 20px;
+  }
+
+  .playlist-picker-list {
+    max-height: 360px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+
+  .playlist-picker-row {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    color: var(--paper);
+    padding: 11px 13px;
+    cursor: pointer;
+    font-size: 13.5px;
+    border-radius: 0;
+  }
+
+  .playlist-picker-row:last-child {
+    border-bottom: none;
+  }
+
+  .playlist-picker-row:hover {
+    background: var(--surface-high);
+  }
+
+  .playlist-picker-row .track-count {
+    color: var(--mist);
+    font-size: 12px;
+  }
+
+  .playlist-picker-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 560px) {
+    .tool-login {
+      justify-content: flex-start;
+    }
+
+    .spotify-login {
+      text-align: left;
+    }
+
+    .spotify-login-actions {
+      justify-content: flex-start;
+    }
+  }
 </style>
 </head>
 <body>
@@ -627,13 +905,13 @@
       API key, nothing to sign up for.
     </p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="#download" id="download-cta">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13" /><path d="m7 11 5 5 5-5" /><path d="M5 20h14" /></svg>
-        Download for Windows
-      </a>
-      <a class="btn btn-ghost" href="/app" id="try-web-cta">
+      <a class="btn btn-primary" href="#download" id="try-web-cta">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z" /></svg>
         Try it in your browser
+      </a>
+      <a class="btn btn-ghost" href="#desktop-download" id="download-cta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13" /><path d="m7 11 5 5 5-5" /><path d="M5 20h14" /></svg>
+        Download for Windows
       </a>
       <a class="btn btn-ghost" href="https://github.com/LStanbrook/downloadify" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.16-.02-2.11-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.04-.72.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.96.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.51-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.24 2.77.11 3.06.74.81 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .31.2.66.79.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z" /></svg>
@@ -736,27 +1014,83 @@ Found playlist "Road Trip" with 42 tracks.
 <section id="download">
   <div class="wrap">
     <div class="section-head">
-      <h2>Get it running<br />in a minute.</h2>
-      <p class="section-kicker">Download</p>
+      <h2>Try it right<br />now.</h2>
+      <p class="section-kicker">Paste a link, get MP3s</p>
     </div>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="https://github.com/LStanbrook/downloadify/releases/latest/download/Downloadify.exe" id="download-cta-2">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13" /><path d="m7 11 5 5 5-5" /><path d="M5 20h14" /></svg>
-        Download Downloadify.exe
-      </a>
-      <a class="btn btn-ghost" href="https://github.com/LStanbrook/downloadify" target="_blank" rel="noopener">Or clone the source →</a>
-    </div>
-    <p class="trust-line" style="margin-top: 22px;">Windows 10/11<span class="sep">·</span>~105MB<span class="sep">·</span>Requires ffmpeg (link included after install)</p>
 
-    <div class="alt-path">
-      <p class="alt-path-kicker">Prefer a browser?</p>
+    <div class="tool">
+      <div class="tool-login" id="spotify-login-section">
+        <div class="spotify-login">
+          <p id="spotify-login-status">Not logged into Spotify</p>
+          <div class="spotify-login-actions">
+            <button id="spotify-login-btn" type="button" class="secondary-btn">Log in with Spotify</button>
+            <button id="browse-playlists-btn" type="button" class="secondary-btn" disabled>Browse my playlists…</button>
+          </div>
+        </div>
+      </div>
+
+      <dialog id="playlist-picker-dialog">
+        <h3>Choose a playlist</h3>
+        <div id="playlist-picker-list" class="playlist-picker-list"></div>
+        <div class="playlist-picker-actions">
+          <button type="button" id="playlist-picker-cancel" class="secondary-btn">Cancel</button>
+        </div>
+      </dialog>
+
+      <form id="download-form" class="card">
+        <label for="playlist-url">Spotify playlist URL</label>
+        <input
+          id="playlist-url"
+          type="text"
+          placeholder="https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+          required
+        />
+
+        <div id="output-dir-field">
+          <label for="output-dir">Output folder (on the server running this app)</label>
+          <input id="output-dir" type="text" placeholder="downloadify_downloads" />
+        </div>
+
+        <div class="actions">
+          <button id="download-btn" type="submit" class="btn btn-primary">Download Playlist</button>
+          <button id="cancel-btn" type="button" class="btn btn-ghost" disabled>Cancel</button>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <p id="status-text">Idle.</p>
+          <a id="download-zip-link" class="btn btn-primary download-zip-link" download>Download ZIP</a>
+        </div>
+      </form>
+
+      <div class="log-section">
+        <div class="log-header">
+          <p class="log-heading">Progress log</p>
+          <label class="checkbox-label">
+            <input type="checkbox" id="full-logs-checkbox" />
+            Show full logs
+          </label>
+        </div>
+        <div class="terminal">
+          <div class="terminal-bar">
+            <span></span><span></span><span></span>
+            <p class="label">downloadify — log</p>
+          </div>
+          <pre id="log-view"></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="alt-path" id="desktop-download" style="margin-top: 56px;">
+      <p class="alt-path-kicker">Prefer a desktop app?</p>
       <p class="alt-path-body">
-        Downloadify also runs as a hosted web app — paste a playlist link,
-        download a ZIP, nothing to install. Downloads run on a shared
-        server and are deleted about an hour after they finish.
+        Downloadify also runs as a native Windows app — no browser tab to
+        keep open, and you pick exactly where files get saved.
       </p>
-      <a class="alt-path-link" href="/app" style="margin-right: 18px;">Open the web app →</a>
-      <a class="alt-path-link" href="https://github.com/LStanbrook/downloadify#web-app" target="_blank" rel="noopener">Or run it locally →</a>
+      <a class="alt-path-link" href="https://github.com/LStanbrook/downloadify/releases/latest/download/Downloadify.exe" style="margin-right: 18px;">Download Downloadify.exe →</a>
+      <a class="alt-path-link" href="https://github.com/LStanbrook/downloadify" target="_blank" rel="noopener">Or view source →</a>
     </div>
   </div>
 </section>
@@ -836,5 +1170,6 @@ Found playlist "Road Trip" with 42 tracks.
     }
   })();
 </script>
+<script src="app.js"></script>
 </body>
 </html>
