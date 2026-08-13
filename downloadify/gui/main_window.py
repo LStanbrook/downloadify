@@ -86,8 +86,12 @@ class MainWindow(QMainWindow):
 
         text_col = QVBoxLayout()
         text_col.setSpacing(6)
-        title = QLabel("Downloadify")
+        title = QLabel()
         title.setObjectName("HeaderTitle")
+        # Matches the website wordmark: a small green "signal" dot beside
+        # the name, rather than coloring the whole title green.
+        title.setTextFormat(Qt.TextFormat.RichText)
+        title.setText('<span style="color: #1db954;">●</span>&nbsp;&nbsp;DOWNLOADIFY')
         text_col.addWidget(title)
         subtitle = QLabel("Paste a public Spotify playlist link to download it as MP3s.")
         subtitle.setObjectName("HeaderSubtitle")
@@ -124,7 +128,7 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(28, 26, 28, 26)
         layout.setSpacing(8)
 
-        layout.addWidget(self._field_label("Playlist URL"))
+        layout.addWidget(self._field_label("PLAYLIST URL"))
         self.url_input = QLineEdit()
         self.url_input.setPlaceholderText(
             "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
@@ -132,7 +136,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.url_input)
 
         layout.addSpacing(12)
-        layout.addWidget(self._field_label("Output folder"))
+        layout.addWidget(self._field_label("OUTPUT FOLDER"))
         folder_row = QHBoxLayout()
         folder_row.setSpacing(12)
         self.folder_input = QLineEdit(str(config.DEFAULT_DOWNLOAD_DIR))

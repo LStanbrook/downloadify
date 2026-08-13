@@ -51,6 +51,7 @@
     font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 
   body::before {
@@ -96,6 +97,8 @@
   .nav .wrap {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    row-gap: 12px;
     justify-content: space-between;
   }
 
@@ -123,10 +126,20 @@
   .nav-links {
     display: flex;
     align-items: center;
-    gap: 28px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 8px;
+    column-gap: 20px;
     font-family: var(--font-mono);
     font-size: 13px;
     letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 420px) {
+    .nav-links {
+      column-gap: 14px;
+      font-size: 12px;
+    }
   }
 
   .nav-links a {
@@ -272,6 +285,16 @@
     width: 17px;
     height: 17px;
     flex-shrink: 0;
+  }
+
+  .btn-large {
+    font-size: 17px;
+    padding: 20px 36px;
+  }
+
+  .btn-large svg {
+    width: 20px;
+    height: 20px;
   }
 
   .trust-line {
@@ -447,57 +470,6 @@
     margin: 0;
   }
 
-  /* ---------- features ---------- */
-
-  .features {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  @media (max-width: 780px) {
-    .features {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 520px) {
-    .features {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .feature {
-    background: var(--surface);
-    padding: 30px 26px;
-  }
-
-  .feature-kicker {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--mist);
-    margin: 0 0 14px;
-  }
-
-  .feature h3 {
-    font-size: 17px;
-    font-weight: 700;
-    margin: 0 0 10px;
-  }
-
-  .feature p {
-    font-size: 14px;
-    color: var(--mist);
-    line-height: 1.6;
-    margin: 0;
-  }
-
   /* ---------- terminal ---------- */
 
   .terminal {
@@ -541,18 +513,6 @@
     line-height: 1.9;
     overflow-x: auto;
     color: #b8c4bd;
-  }
-
-  .terminal .ok {
-    color: var(--signal);
-  }
-
-  .terminal .fail {
-    color: var(--danger);
-  }
-
-  .terminal .dim {
-    color: #5b6b62;
   }
 
   /* ---------- footer ---------- */
@@ -605,7 +565,7 @@
   /* ---------- embedded tool ---------- */
 
   .tool {
-    max-width: 640px;
+    max-width: 860px;
   }
 
   .tool-login {
@@ -887,8 +847,8 @@
   <div class="wrap">
     <a class="wordmark" href="#top"><span class="dot"></span>Downloadify</a>
     <div class="nav-links">
+      <a href="#download">Try it</a>
       <a href="#how">How it works</a>
-      <a href="#features">Features</a>
       <a href="https://github.com/LStanbrook/downloadify" target="_blank" rel="noopener">GitHub</a>
     </div>
   </div>
@@ -898,124 +858,28 @@
   <canvas id="eq" aria-hidden="true"></canvas>
   <div class="wrap hero-inner">
     <p class="eyebrow">Spotify playlist → mp3 files</p>
-    <h1>Stop renting<br />your <em>music.</em></h1>
+    <h1>Download Spotify<br />playlists as <em>mp3s.</em></h1>
     <p class="lede">
       Paste a public Spotify playlist link. Downloadify finds every track on
       YouTube and saves it as a <strong>320kbps MP3</strong> — no login, no
       API key, nothing to sign up for.
     </p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="#download" id="try-web-cta">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z" /></svg>
-        Try it in your browser
-      </a>
-      <a class="btn btn-ghost" href="#desktop-download" id="download-cta">
+      <a class="btn btn-primary btn-large" href="https://github.com/LStanbrook/downloadify/releases/latest/download/Downloadify.exe" id="download-cta">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13" /><path d="m7 11 5 5 5-5" /><path d="M5 20h14" /></svg>
         Download for Windows
       </a>
-      <a class="btn btn-ghost" href="https://github.com/LStanbrook/downloadify" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.16-.02-2.11-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.04-.72.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.96.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.51-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.24 2.77.11 3.06.74.81 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .31.2.66.79.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z" /></svg>
-        View source
-      </a>
     </div>
     <p class="trust-line">Free<span class="sep">·</span>Open source<span class="sep">·</span>Nothing to install for the browser version</p>
+    <a class="alt-path-link" href="https://github.com/LStanbrook/downloadify" target="_blank" rel="noopener" style="display: inline-block; margin-top: 20px;">View source →</a>
   </div>
 </header>
-
-<section id="how">
-  <div class="wrap">
-    <div class="section-head">
-      <h2>Three steps.<br />No account.</h2>
-      <p class="section-kicker">How it works</p>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <p class="step-index">01 — Paste</p>
-        <h3>Drop in a playlist link</h3>
-        <p>Any public Spotify playlist. No account, no login screen, no API key to generate first.</p>
-      </div>
-      <div class="step">
-        <p class="step-index">02 — Match</p>
-        <h3>Downloadify finds each track</h3>
-        <p>Every YouTube result is scored on title and track length before anything downloads, so live sets and remixes don't sneak in.</p>
-      </div>
-      <div class="step">
-        <p class="step-index">03 — Download</p>
-        <h3>Get real MP3 files</h3>
-        <p>Every match is pulled down and encoded at 320kbps, saved into a folder named after the playlist.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="features">
-  <div class="wrap">
-    <div class="section-head">
-      <h2>Built to just<br />work.</h2>
-      <p class="section-kicker">Features</p>
-    </div>
-    <div class="features">
-      <div class="feature">
-        <p class="feature-kicker">No login</p>
-        <h3>Works without an account</h3>
-        <p>Reads playlists straight from Spotify's public embed page. No password, no OAuth screen, no API key.</p>
-      </div>
-      <div class="feature">
-        <p class="feature-kicker">Smart matching</p>
-        <h3>Skips the wrong song</h3>
-        <p>Results are scored on title and duration before downloading, so a live version or the wrong remix doesn't slip through.</p>
-      </div>
-      <div class="feature">
-        <p class="feature-kicker">320kbps mp3</p>
-        <h3>Full-bitrate output</h3>
-        <p>Every track is encoded at 320kbps — the ceiling of what the source audio can offer.</p>
-      </div>
-      <div class="feature">
-        <p class="feature-kicker">Two ways in</p>
-        <h3>Desktop app or browser</h3>
-        <p>A native Windows app, or run it as a local web app from any browser. Same engine either way.</p>
-      </div>
-      <div class="feature">
-        <p class="feature-kicker">Open source</p>
-        <h3>Nothing hidden</h3>
-        <p>Every request Downloadify makes is in the source, on GitHub, free to read, fork, or audit.</p>
-      </div>
-      <div class="feature">
-        <p class="feature-kicker">Optional login</p>
-        <h3>Personalized playlists too</h3>
-        <p>Log in once to also pull Discover Weekly, Daily Mixes, and your own private playlists.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="output">
-  <div class="wrap">
-    <div class="section-head">
-      <h2>Real output.<br />Not a mockup.</h2>
-      <p class="section-kicker">What you'll see</p>
-    </div>
-    <div class="terminal">
-      <div class="terminal-bar">
-        <span></span><span></span><span></span>
-        <p class="label">downloadify — log</p>
-      </div>
-      <pre><span class="dim">Resolving playlist: https://open.spotify.com/playlist/…</span>
-Found playlist "Road Trip" with 42 tracks.
-<span class="ok">[SUCCESS]</span> Tame Impala - The Less I Know The Better
-<span class="ok">[SUCCESS]</span> Mac DeMarco - Chamber of Reflection
-<span class="fail">[FAIL]</span> obscure b-side -- no confident match found on YouTube
-<span class="ok">[SUCCESS]</span> King Gizzard &amp; The Lizard Wizard - Rattlesnake
-<span class="dim">Done. 40/42 tracks downloaded successfully to "Road Trip".</span></pre>
-    </div>
-  </div>
-</section>
 
 <section id="download">
   <div class="wrap">
     <div class="section-head">
-      <h2>Try it right<br />now.</h2>
-      <p class="section-kicker">Paste a link, get MP3s</p>
+      <h2 id="download-heading">Try the demo.<br />Download for <em>full functionality.</em></h2>
+      <p class="section-kicker" id="download-kicker">Paste a link, get MP3s</p>
     </div>
 
     <div class="tool">
@@ -1082,15 +946,31 @@ Found playlist "Road Trip" with 42 tracks.
         </div>
       </div>
     </div>
+  </div>
+</section>
 
-    <div class="alt-path" id="desktop-download" style="margin-top: 56px;">
-      <p class="alt-path-kicker">Prefer a desktop app?</p>
-      <p class="alt-path-body">
-        Downloadify also runs as a native Windows app — no browser tab to
-        keep open, and you pick exactly where files get saved.
-      </p>
-      <a class="alt-path-link" href="https://github.com/LStanbrook/downloadify/releases/latest/download/Downloadify.exe" style="margin-right: 18px;">Download Downloadify.exe →</a>
-      <a class="alt-path-link" href="https://github.com/LStanbrook/downloadify" target="_blank" rel="noopener">Or view source →</a>
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Three steps.<br />No account.</h2>
+      <p class="section-kicker">How it works</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <p class="step-index">01 — Paste</p>
+        <h3>Drop in a playlist link</h3>
+        <p>Any public Spotify playlist. No account, no login screen, no API key to generate first.</p>
+      </div>
+      <div class="step">
+        <p class="step-index">02 — Match</p>
+        <h3>Downloadify finds each track</h3>
+        <p>Every YouTube result is scored on title and track length before anything downloads, so live sets and remixes don't sneak in.</p>
+      </div>
+      <div class="step">
+        <p class="step-index">03 — Download</p>
+        <h3>Get real MP3 files</h3>
+        <p>Every match is pulled down and encoded at 320kbps, saved into a folder named after the playlist.</p>
+      </div>
     </div>
   </div>
 </section>

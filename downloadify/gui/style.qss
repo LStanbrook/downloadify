@@ -1,48 +1,53 @@
-/* Downloadify desktop theme.
-   Palette kept in sync with the web app's static/style.css:
-     background  #121212     accent       #1db954 (Spotify green)
-     panel       #1c1c1c     accent-dark  #169c46
-     border      #2e2e2e     danger       #e64b4b
-     text        #eaeaea     muted        #9a9a9a
+/* Downloadify desktop theme -- palette and type treatment kept in exact
+   sync with the website's CSS custom properties (see :root in
+   downloadify/web/static/index.html):
+     ink #0d1210        surface #141a16      surface-high #1c2620
+     signal #1db954      paper #eef2ee        mist #8fa398
+     line #24302a         danger #e2634f
+   Small labels (field labels, status line, checkbox) use the site's mono
+   "kicker" font (Cascadia Code/Consolas) to match its uppercase-mono-label
+   treatment; Qt Style Sheets don't support text-transform, so the matching
+   uppercase text itself is set in main_window.py rather than here.
 */
 
 QWidget {
-    background-color: #121212;
-    color: #eaeaea;
+    background-color: #0d1210;
+    color: #eef2ee;
     font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     font-size: 12.5pt;
 }
 
 QLabel#HeaderTitle {
-    color: #1db954;
-    font-size: 40pt;
+    color: #eef2ee;
+    font-size: 32pt;
     font-weight: 800;
 }
 
 QLabel#HeaderSubtitle {
-    color: #b0b0b0;
-    font-size: 14pt;
+    color: #8fa398;
+    font-size: 13pt;
 }
 
 QFrame#Card {
-    background-color: #1c1c1c;
-    border: 1px solid #2e2e2e;
-    border-radius: 12px;
+    background-color: #141a16;
+    border: 1px solid #24302a;
+    border-radius: 6px;
 }
 
 QLabel#FieldLabel {
-    color: #aaaaaa;
-    font-size: 12pt;
+    color: #8fa398;
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 9.5pt;
     font-weight: 600;
 }
 
 QLineEdit {
-    background-color: #0f0f0f;
-    border: 1px solid #2e2e2e;
-    border-radius: 8px;
+    background-color: #0d1210;
+    border: 1px solid #24302a;
+    border-radius: 4px;
     padding: 14px 16px;
     font-size: 12.5pt;
-    color: #eaeaea;
+    color: #eef2ee;
     selection-background-color: #1db954;
     selection-color: #04240f;
 }
@@ -52,14 +57,14 @@ QLineEdit:focus {
 }
 
 QLineEdit:disabled {
-    color: #666666;
+    color: #55655d;
 }
 
 QPushButton {
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 18px 36px;
-    font-weight: 700;
-    font-size: 14.5pt;
+    font-weight: 600;
+    font-size: 13.5pt;
     border: none;
 }
 
@@ -73,45 +78,52 @@ QPushButton#downloadButton:hover:!disabled {
 }
 
 QPushButton#downloadButton:pressed:!disabled {
-    background-color: #169c46;
+    background-color: #12793a;
 }
 
 QPushButton#downloadButton:disabled {
-    background-color: #2b3a30;
-    color: #5c6b60;
+    background-color: #1c2620;
+    color: #4c5c53;
 }
 
 QPushButton#cancelButton {
     background-color: transparent;
-    border: 1px solid #e64b4b;
-    color: #e64b4b;
+    border: 1px solid #e2634f;
+    color: #e2634f;
 }
 
 QPushButton#cancelButton:hover:!disabled {
-    background-color: rgba(230, 75, 75, 0.12);
+    background-color: rgba(226, 99, 79, 0.12);
 }
 
 QPushButton#cancelButton:disabled {
-    border: 1px solid #4a3232;
-    color: #6b4a4a;
+    border: 1px solid #3a2c28;
+    color: #5c4a45;
 }
 
 QPushButton#browseButton {
-    background-color: #262626;
-    color: #eaeaea;
-    border: 1px solid #3a3a3a;
+    background-color: #1c2620;
+    color: #eef2ee;
+    border: 1px solid #24302a;
+    font-size: 11pt;
+    font-weight: 600;
+    padding: 10px 18px;
 }
 
-QPushButton#browseButton:hover {
-    background-color: #303030;
+QPushButton#browseButton:hover:!disabled {
+    border: 1px solid #8fa398;
+}
+
+QPushButton#browseButton:disabled {
+    color: #55655d;
 }
 
 QProgressBar {
-    background-color: #0f0f0f;
-    border: 1px solid #2e2e2e;
+    background-color: #0d1210;
+    border: 1px solid #24302a;
     border-radius: 16px;
-    max-height: 54px;
-    min-height: 54px;
+    max-height: 44px;
+    min-height: 44px;
     text-align: center;
     color: transparent;
 }
@@ -122,24 +134,26 @@ QProgressBar::chunk {
 }
 
 QLabel#StatusLabel {
-    color: #b0b0b0;
-    font-size: 15pt;
+    color: #8fa398;
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 11pt;
     font-weight: 600;
 }
 
 QCheckBox {
-    color: #d8d8d8;
-    font-size: 14pt;
+    color: #8fa398;
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 10.5pt;
     font-weight: 600;
-    spacing: 12px;
+    spacing: 10px;
 }
 
 QCheckBox::indicator {
-    width: 26px;
-    height: 26px;
-    border-radius: 5px;
-    border: 1px solid #3a3a3a;
-    background-color: #0f0f0f;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid #24302a;
+    background-color: #0d1210;
 }
 
 QCheckBox::indicator:hover {
@@ -152,19 +166,19 @@ QCheckBox::indicator:checked {
 }
 
 QLabel#LogHeader {
-    color: #eaeaea;
-    font-size: 17pt;
+    color: #eef2ee;
+    font-size: 15pt;
     font-weight: 700;
 }
 
 QPlainTextEdit#LogView {
-    background-color: #0a0a0a;
-    border: 1px solid #2e2e2e;
-    border-radius: 10px;
+    background-color: #090c0a;
+    border: 1px solid #24302a;
+    border-radius: 6px;
     padding: 16px;
     font-family: "Cascadia Code", "Consolas", monospace;
-    font-size: 12.5pt;
-    color: #c9c9c9;
+    font-size: 11pt;
+    color: #b8c4bd;
 }
 
 QSplitter::handle {
@@ -182,13 +196,13 @@ QScrollBar:vertical {
 }
 
 QScrollBar::handle:vertical {
-    background: #333333;
+    background: #24302a;
     border-radius: 5px;
     min-height: 24px;
 }
 
 QScrollBar::handle:vertical:hover {
-    background: #444444;
+    background: #34443c;
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
@@ -202,5 +216,5 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 }
 
 QMessageBox {
-    background-color: #1c1c1c;
+    background-color: #141a16;
 }

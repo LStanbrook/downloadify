@@ -24,10 +24,12 @@ let eventSource = null;
 let spotifyLoggedIn = false;
 let publicDeployment = false;
 
-// On a public hosted deployment, the server runs for many visitors at once,
-// so the Spotify login and the "pick your own server-side output folder"
-// field don't make sense there (see server.py's PUBLIC_DEPLOYMENT gating) --
-// hide them and swap in a "Download ZIP" button once a job finishes instead.
+// The static HTML defaults to framing this page as the public demo it is at
+// downloadify.co.uk (shared server, capped tracks, no Spotify login here --
+// see server.py's PUBLIC_DEPLOYMENT gating). Running locally instead
+// (`python main.py --mode web`) *is* the full-featured app, so that framing
+// gets swapped back to a plain "try it now" heading and the Spotify
+// login / server-side output folder fields are shown instead of hidden.
 async function loadClientConfig() {
   try {
     const resp = await fetch("/api/config");
@@ -39,11 +41,8 @@ async function loadClientConfig() {
   if (publicDeployment) {
     document.getElementById("spotify-login-section").style.display = "none";
     document.getElementById("output-dir-field").style.display = "none";
-    const lead = document.getElementById("fine-print-lead");
-    if (lead) {
-      lead.textContent =
-        "Downloads run on a shared server and are deleted about an hour after they finish — grab your ZIP promptly.";
-    }
+  } else {
+    document.getElementById("download-heading").innerHTML = "Try it right<br />now.";
   }
 }
 
