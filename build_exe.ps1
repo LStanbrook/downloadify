@@ -23,6 +23,7 @@ if (-not (Test-Path ".venv_build")) {
     --windowed `
     --icon "website\assets\downloadify.ico" `
     --add-data "downloadify\gui\style.qss;downloadify\gui" `
+    --add-data "downloadify\gui\fonts\BigShouldersDisplay-Black.ttf;downloadify\gui\fonts" `
     --collect-all yt_dlp `
     --collect-all PyQt6 `
     --noconfirm `

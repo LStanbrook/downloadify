@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtGui import QTextCursor
+from PyQt6.QtGui import QFontDatabase, QTextCursor
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -35,6 +35,10 @@ from downloadify.gui.playlist_picker import PlaylistPickerDialog
 from downloadify.gui.worker import DownloadWorker, PlaylistListWorker, SpotifyLoginWorker
 
 _STYLESHEET_PATH = Path(__file__).resolve().parent / "style.qss"
+# Same font file embedded (as woff2) in the website's <h1> -- extracted to a
+# .ttf once so the desktop title reads as the identical typeface, not just a
+# similarly-bold system font standing in for it.
+_DISPLAY_FONT_PATH = Path(__file__).resolve().parent / "fonts" / "BigShouldersDisplay-Black.ttf"
 
 _STATUS_COLOR_SUCCESS = "#1db954"
 _STATUS_COLOR_WARNING = "#e0a030"
@@ -89,9 +93,14 @@ class MainWindow(QMainWindow):
         title = QLabel()
         title.setObjectName("HeaderTitle")
         # Matches the website wordmark: a small green "signal" dot beside
-        # the name, rather than coloring the whole title green.
+        # the name, rather than coloring the whole title green. The dot
+        # explicitly pins a normal font since the display font's glyph set
+        # isn't guaranteed to include a bullet character.
         title.setTextFormat(Qt.TextFormat.RichText)
-        title.setText('<span style="color: #1db954;">●</span>&nbsp;&nbsp;DOWNLOADIFY')
+        title.setText(
+            '<span style="color: #1db954; font-family: \'Segoe UI\';">●</span>'
+            "&nbsp;&nbsp;DOWNLOADIFY"
+        )
         text_col.addWidget(title)
         subtitle = QLabel("Paste a public Spotify playlist link to download it as MP3s.")
         subtitle.setObjectName("HeaderSubtitle")
@@ -374,13 +383,52 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(0)
 
 
+def _load_display_font() -> str | None:
+    """Registers the bundled display font and returns its usable family
+    name, or None if it's missing/unreadable (falls back to a bold system
+    font rather than failing to launch)."""
+    if not _DISPLAY_FONT_PATH.exists():
+        return None
+    font_id = QFontDatabase.addApplicationFont(str(_DISPLAY_FONT_PATH))
+    if font_id == -1:
+        return None
+    families = QFontDatabase.applicationFontFamilies(font_id)
+    if not families:
+        return None
+    # This file only bakes in the single Black (900) weight used by the
+    # website's <h1>/<h2>, but Qt can report more than one family name for
+    # it (a quirk of how Google Fonts names static instances cut from a
+    # variable font) -- prefer whichever name actually says "Black" so a
+    # lighter-weight alias isn't picked by accident.
+    for name in families:
+        if "black" in name.lower():
+            return name
+    return families[-1]
+
+
 def run_gui() -> None:
     """Entrypoint used by main.py to launch the desktop app."""
     app = QApplication(sys.argv)
+    display_font_family = _load_display_font()
+
+    stylesheet = ""
     try:
-        app.setStyleSheet(_STYLESHEET_PATH.read_text(encoding="utf-8"))
+        stylesheet = _STYLESHEET_PATH.read_text(encoding="utf-8")
     except OSError:
         pass  # Fall back to the default Qt look rather than fail to launch.
+
+    # Qt's stylesheet cascade overrides a plain QWidget.setFont() call for
+    # any property the stylesheet already touches -- including this file's
+    # blanket `QWidget { font-family; font-size }` rule -- so the title's
+    # font has to be injected into the cascade itself (as a more-specific
+    # #HeaderTitle rule) rather than relied on via setFont() alone.
+    title_family = display_font_family or "Segoe UI"
+    stylesheet += (
+        f'\nQLabel#HeaderTitle {{ font-family: "{title_family}"; '
+        "font-size: 48pt; font-weight: 900; }\n"
+    )
+    app.setStyleSheet(stylesheet)
+
     window = MainWindow()
     window.show()
     sys.exit(app.exec())

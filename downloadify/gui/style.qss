@@ -17,12 +17,6 @@ QWidget {
     font-size: 12.5pt;
 }
 
-QLabel#HeaderTitle {
-    color: #eef2ee;
-    font-size: 32pt;
-    font-weight: 800;
-}
-
 QLabel#HeaderSubtitle {
     color: #8fa398;
     font-size: 13pt;
