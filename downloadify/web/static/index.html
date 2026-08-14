@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Downloadify — turn a Spotify playlist into real MP3 files</title>
-<meta name="description" content="Paste a public Spotify playlist link. Downloadify finds every track on YouTube and saves it as a 320kbps MP3 — no login, no API key, nothing to sign up for." />
+<meta name="description" content="Paste a public Spotify playlist link. Downloadify finds every track on YouTube and saves it as a 320kbps MP3 — no login, no API key, no sign up." />
 <link rel="icon" href="/favicon.ico" />
 
 <style>
@@ -857,7 +857,7 @@
     <p class="lede">
       Paste a public Spotify playlist link. Downloadify finds every track on
       YouTube and saves it as a <strong>320kbps MP3</strong> — no login, no
-      API key, nothing to sign up for.
+      API key, no sign up.
     </p>
     <div class="cta-row">
       <a class="btn btn-primary btn-large" href="https://github.com/LStanbrook/downloadify/releases/latest/download/Downloadify.exe" id="download-cta">
@@ -995,6 +995,13 @@
     var barCount = 64;
     var t = 0;
 
+    // Bars bulge toward the cursor -- mouseX is in canvas pixel space,
+    // intensity eases toward 1 while hovering and back to 0 on mouseleave
+    // so the effect fades in/out instead of snapping.
+    var mouseX = 0;
+    var targetIntensity = 0;
+    var intensity = 0;
+
     function resize() {
       var rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * dpr;
@@ -1007,6 +1014,7 @@
       ctx.clearRect(0, 0, w, h);
       var gap = w / barCount;
       var barW = gap * 0.46;
+      var sigma = w * 0.07;
 
       for (var i = 0; i < barCount; i++) {
         var phase = i * 0.36;
@@ -1015,11 +1023,17 @@
           0.22 * Math.sin(t * 0.9 + phase) +
           0.18 * Math.sin(t * 1.7 + phase * 1.3) +
           0.1 * Math.sin(t * 0.4 + phase * 0.5);
+
+        var barCenterX = i * gap + gap / 2;
+        var dx = barCenterX - mouseX;
+        var boost = intensity * Math.exp(-(dx * dx) / (2 * sigma * sigma));
+        base += boost * 0.6;
         base = Math.max(0.08, Math.min(1, base));
+
         var barH = base * h * 0.86;
         var isTape = i % 11 === 3;
         ctx.fillStyle = isTape ? "#e2984f" : "#1db954";
-        ctx.globalAlpha = isTape ? 0.55 : 0.85;
+        ctx.globalAlpha = Math.min(1, (isTape ? 0.55 : 0.85) + boost * 0.15);
         var x = i * gap + (gap - barW) / 2;
         ctx.fillRect(x, h - barH, barW, barH);
       }
@@ -1027,8 +1041,9 @@
 
     function frame() {
       t += 0.016;
+      intensity += (targetIntensity - intensity) * 0.08;
       draw();
-      if (!reduceMotion) requestAnimationFrame(frame);
+      requestAnimationFrame(frame);
     }
 
     window.addEventListener("resize", function () {
@@ -1036,12 +1051,39 @@
       draw();
     });
 
+    if (!reduceMotion) {
+      var heroEl = canvas.closest(".hero");
+      if (heroEl) {
+        heroEl.addEventListener("mousemove", function (e) {
+          var rect = canvas.getBoundingClientRect();
+          mouseX = (e.clientX - rect.left) * dpr;
+          targetIntensity = 1;
+        });
+        heroEl.addEventListener("mouseleave", function () {
+          targetIntensity = 0;
+        });
+      }
+    }
+
     resize();
     if (reduceMotion) {
       draw();
     } else {
       requestAnimationFrame(frame);
     }
+  })();
+
+  // Scroll to top on logo click instead of a native "#top" anchor jump, so
+  // it doesn't leave a stray #top in the URL on a page with nowhere else to
+  // navigate to.
+  (function () {
+    var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.querySelectorAll(".wordmark").forEach(function (el) {
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+      });
+    });
   })();
 </script>
 <script src="app.js"></script>
