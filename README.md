@@ -395,36 +395,50 @@ any meaningful scale.
 
 If you're planning to put this on GitHub for others to download and run
 themselves (or to run the web app for others to use), a few things are worth
-knowing:
+knowing.
 
-- **Don't bake your own Spotify API key into the published code.** Spotify
-  rate-limits per credential, not per end user. If everyone's copy of the app
-  shared one embedded key, all of their traffic would draw from the same
-  quota — the app would get *less* reliable the more popular it got, and a
-  key sitting in a public repo isn't confidential anymore either, which is a
-  violation of Spotify's Developer Terms on its own. This is exactly why the
-  default path needs no key at all, and why the optional key above is
-  something each user adds for themselves, not something you publish.
-- **The optional login (for personalized/private playlists) is scoped
-  per-user for the same reason.** New Spotify apps start in "Development
-  Mode," which caps *user-authorizing* apps (Authorization Code flow, i.e.
-  "log in with Spotify") at 25 distinct accounts under one Client ID unless
-  Spotify approves an Extended Quota Mode review. If everyone's copy of a
-  published app tried to log in through *your* Client ID, the 26th person to
-  try would simply be turned away by Spotify. Since each user already sets
-  up their own free Client ID for the 100+ track case, the login reuses that
-  same per-user app registration — each one only ever authorizes its own
-  owner, so the 25-account cap is never in play for anyone. Don't register
-  one Client ID yourself and have a published app share it for login; that's
-  the one setup that would actually hit this limit.
-- **YouTube requests already scale fine** — every user's copy of the app
-  makes its own YouTube search/download requests from their own machine, so
-  there's no shared quota to worry about there at all.
+**Running from source** keeps the behavior described above: no key needed by
+default, and the optional `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` in
+`.env` (for the 100+ track extension and login) is something each person
+running the source is expected to set up for themselves, for reasons worth
+understanding before you consider hard-coding your own:
 
-Net effect: the app as shipped has no shared secret, no shared login, and no
-single point that gets rate-limited as usage grows — the one tradeoff is the
-100-track cap (and personalized/private playlists) unless a user opts into
-their own free Client ID.
+- Spotify rate-limits per credential, not per end user. If everyone's copy of
+  the app shared one embedded key, all of their traffic would draw from the
+  same quota — the app would get *less* reliable the more popular it got, and
+  a key sitting in a public repo isn't confidential anymore either, which is
+  a violation of Spotify's Developer Terms on its own.
+- New Spotify apps start in "Development Mode," which caps *user-authorizing*
+  apps (Authorization Code flow, i.e. "log in with Spotify") at 25 distinct
+  accounts under one Client ID — and each of those 25 has to be manually
+  allowlisted by email in the app's dashboard before they can even attempt to
+  log in — unless Spotify approves an Extended Quota Mode review. If
+  everyone's copy of a published app tried to log in through *your* Client
+  ID, this cap would be hit almost immediately.
+- YouTube requests already scale fine regardless — every user's copy of the
+  app makes its own YouTube search/download requests from their own machine,
+  so there's no shared quota to worry about there at all.
+
+**The packaged `Downloadify.exe` releases are a deliberate exception to the
+first two points above.** So that "Log in with Spotify" works out of the box
+for anyone who downloads the pre-built exe — rather than every downloader
+needing to register their own Spotify app first just to try it — the exe
+bakes in a Client ID as its default (see `config.py`'s
+`_PACKAGED_DEFAULT_SPOTIFY_CLIENT_ID`, used only when running as a frozen
+exe and only as a fallback if a `.env` next to the exe doesn't set its own
+`SPOTIFY_CLIENT_ID`). This knowingly accepts the shared-quota tradeoff above
+in exchange for the exe working without setup, and means the 25-account
+Development Mode cap applies across *all* copies of the published exe until
+that Client ID's app is approved for Extended Quota Mode. If you fork this
+project and publish your own exe builds, either request Extended Quota Mode
+for your own baked-in Client ID, or remove the fallback and require each
+downloader to bring their own key as the source-checkout path already does.
+
+Net effect: running from source has no shared secret, no shared login, and
+no single point that gets rate-limited as usage grows, at the cost of each
+user setting up their own free key for the 100-track extension and login.
+The published exe trades that isolation for working out of the box, at the
+cost of a shared quota and login cap across everyone who downloads it.
 
 ### YouTube search — no API key, with match filtering
 
