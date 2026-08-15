@@ -248,6 +248,24 @@
     margin-bottom: 22px;
   }
 
+  .setup-note {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--mist);
+    max-width: 46ch;
+  }
+
+  .setup-note a {
+    color: var(--paper);
+    text-decoration: none;
+    border-bottom: 1px solid var(--signal);
+  }
+
+  .setup-note a:hover,
+  .setup-note a:focus-visible {
+    color: var(--signal);
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;
@@ -865,6 +883,11 @@
         Download for Windows
       </a>
     </div>
+    <p class="setup-note">
+      The app removes the shared-server limits below (pick your own folder, no auto-delete) — playlists over 100 tracks and Spotify login need a free
+      <a href="https://github.com/LStanbrook/downloadify#getting-full-playlists-over-100-tracks-optional" target="_blank" rel="noopener">2-minute Spotify key setup</a>,
+      the same either way.
+    </p>
     <a class="alt-path-link" href="https://github.com/LStanbrook/downloadify" target="_blank" rel="noopener" style="display: inline-block; margin-top: 20px;">View source →</a>
   </div>
 </header>
