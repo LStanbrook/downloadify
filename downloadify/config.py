@@ -132,6 +132,14 @@ AUDIO_FORMAT = "mp3"
 # more of it than YouTube's own compression already did.
 AUDIO_QUALITY_KBPS = "320"
 
+# Optional path to a Netscape-format cookies.txt, passed straight to yt-dlp.
+# Needed on hosts where YouTube's bot-check ("Sign in to confirm you're not
+# a bot") blocks requests outright regardless of player client -- disproportionately
+# hits datacenter/VPS IPs. Deliberately meant to hold an anonymous (logged-out)
+# session's cookies, not a real account's -- never commit this file or point
+# it at cookies from a real login.
+YOUTUBE_COOKIES_FILE = os.getenv("YOUTUBE_COOKIES_FILE", "").strip()
+
 # Optional explicit folder containing ffmpeg/ffprobe. Only needed if yt-dlp
 # reports "ffprobe and ffmpeg not found" despite ffmpeg being installed --
 # most commonly right after installing it, before restarting the terminal/

@@ -65,9 +65,19 @@ def download_audio_as_mp3(
                 "preferredquality": config.AUDIO_QUALITY_KBPS,
             }
         ],
+        # YouTube's bot-check ("Sign in to confirm you're not a bot") is
+        # tied to the web client's stricter token requirements and
+        # disproportionately hits requests from datacenter/VPS IPs like a
+        # hosted deployment's. The android/ios clients use a different auth
+        # flow that isn't subject to the same check, so trying those first
+        # avoids it in most cases without needing cookies at all; "web" stays
+        # as a last-resort fallback for anything those two can't resolve.
+        "extractor_args": {"youtube": {"player_client": ["android", "ios", "web"]}},
     }
     if config.FFMPEG_LOCATION:
         ydl_opts["ffmpeg_location"] = config.FFMPEG_LOCATION
+    if config.YOUTUBE_COOKIES_FILE:
+        ydl_opts["cookiefile"] = config.YOUTUBE_COOKIES_FILE
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
