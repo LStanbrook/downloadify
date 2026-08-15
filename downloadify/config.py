@@ -149,7 +149,12 @@ FFMPEG_LOCATION = os.getenv("FFMPEG_LOCATION", "").strip()
 # Cap on how many tracks are downloaded at once. yt-dlp + ffmpeg are CPU/IO
 # heavy, and hammering YouTube with too many concurrent requests increases
 # the odds of getting throttled, so a small number is deliberately used.
-MAX_CONCURRENT_DOWNLOADS = 3
+# Overridable via env var since a shared-IP deployment (e.g. a VPS) hits
+# YouTube's bot-check far more readily under concurrent load than a single
+# user's own machine does -- see the conversation around the "Sign in to
+# confirm you're not a bot" investigation for why this needed to be tuned
+# down independently of the default.
+MAX_CONCURRENT_DOWNLOADS = int(os.getenv("MAX_CONCURRENT_DOWNLOADS", "3"))
 
 # --------------------------------------------------------------------------
 # Public web deployment
