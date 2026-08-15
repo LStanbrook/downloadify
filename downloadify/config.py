@@ -49,25 +49,14 @@ DEFAULT_DOWNLOAD_DIR = PROJECT_ROOT / "downloadify_downloads"
 # fetch the *remaining* tracks of playlists over the 100-track cap via the
 # official, fully-paginated Spotify Web API. Each user of this app is meant
 # to set their own -- see the README before hard-coding/sharing a single key,
-# since Spotify rate-limits per credential and a shared key won't scale.
-#
-# One deliberate exception: the packaged .exe distribution (only) falls back
-# to a baked-in Client ID so "Log in with Spotify" works out of the box for
-# anyone who downloads it, without each person needing to register their own
-# app first. This is a conscious tradeoff -- see the README's "Publishing
-# this app" section for what it costs (a shared login quota/rate limit
-# across every copy of the exe) versus what it buys (login just works). A
-# `.env` next to the exe still overrides this with the downloader's own key
-# if they set one. Running from source keeps the previous behavior (empty
-# unless set in .env), since a source checkout is assumed to be a developer
-# who can get their own free key in a couple of minutes.
-_PACKAGED_DEFAULT_SPOTIFY_CLIENT_ID = (
-    "21da1c94f3954d13b770830b0b7b9f26" if getattr(sys, "frozen", False) else ""
-)
-
-SPOTIFY_CLIENT_ID = (
-    os.getenv("SPOTIFY_CLIENT_ID", "").strip() or _PACKAGED_DEFAULT_SPOTIFY_CLIENT_ID
-)
+# since Spotify rate-limits per credential and a shared key won't scale, and
+# (as of Spotify's February 2026 policy change) Development Mode caps
+# user-authorizing logins at just 5 accounts per Client ID -- a baked-in
+# shared key was tried for the packaged exe and deliberately reverted once
+# that made the login feature effectively a 5-person allowlist rather than
+# something that works for anyone who downloads the app. See the README's
+# "Publishing this app" section for the full reasoning.
+SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID", "").strip()
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET", "").strip()
 
 SPOTIFY_OAUTH_TOKEN_URL = "https://accounts.spotify.com/api/token"
