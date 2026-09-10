@@ -8,6 +8,7 @@ in more than one place.
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 import tempfile
@@ -37,6 +38,38 @@ load_dotenv(PROJECT_ROOT / ".env" if getattr(sys, "frozen", False) else None)
 DEFAULT_DOWNLOAD_DIR = PROJECT_ROOT / "downloadify_downloads"
 
 # --------------------------------------------------------------------------
+# On-disk settings (things the app itself can write back)
+# --------------------------------------------------------------------------
+
+# A tiny JSON file next to the .env / token cache. Right now it only holds
+# the Spotify Client ID, so the packaged .exe can offer an in-app
+# "Set up Spotify" prompt instead of making people hand-edit a .env. An
+# environment variable / .env value always wins over anything saved here.
+SETTINGS_PATH = PROJECT_ROOT / ".downloadify_settings.json"
+
+
+def _load_settings() -> dict:
+    try:
+        data = json.loads(SETTINGS_PATH.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+_SAVED_SETTINGS = _load_settings()
+
+
+def save_spotify_client_id(client_id: str) -> None:
+    """Persist the Spotify Client ID to the settings file and update the
+    in-memory value so it takes effect without restarting the app. Raises
+    OSError if the file can't be written (e.g. a read-only install folder)."""
+    global SPOTIFY_CLIENT_ID
+    settings = _load_settings()
+    settings["spotify_client_id"] = client_id.strip()
+    SETTINGS_PATH.write_text(json.dumps(settings, indent=2), encoding="utf-8")
+    SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID", "").strip() or client_id.strip()
+
+# --------------------------------------------------------------------------
 # Spotify
 # --------------------------------------------------------------------------
 
@@ -56,8 +89,17 @@ DEFAULT_DOWNLOAD_DIR = PROJECT_ROOT / "downloadify_downloads"
 # that made the login feature effectively a 5-person allowlist rather than
 # something that works for anyone who downloads the app. See the README's
 # "Publishing this app" section for the full reasoning.
-SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID", "").strip()
-SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET", "").strip()
+#
+# Resolution order: environment / .env first, then whatever the in-app
+# "Set up Spotify" prompt saved to .downloadify_settings.json.
+SPOTIFY_CLIENT_ID = (
+    os.getenv("SPOTIFY_CLIENT_ID", "").strip()
+    or (_SAVED_SETTINGS.get("spotify_client_id") or "").strip()
+)
+SPOTIFY_CLIENT_SECRET = (
+    os.getenv("SPOTIFY_CLIENT_SECRET", "").strip()
+    or (_SAVED_SETTINGS.get("spotify_client_secret") or "").strip()
+)
 
 SPOTIFY_OAUTH_TOKEN_URL = "https://accounts.spotify.com/api/token"
 SPOTIFY_API_BASE = "https://api.spotify.com/v1"

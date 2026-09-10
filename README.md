@@ -302,6 +302,14 @@ Downloadify (or anyone) access to your account, just to public catalog data:
 7. Save the file. No restart of anything else is needed — Downloadify reads
    `.env` automatically each time it starts.
 
+**Using the packaged `.exe`?** You don't need to touch `.env` at all — click
+**Set up Spotify** in the app, paste just the Client ID, and click **Save**
+(it's stored in `.downloadify_settings.json` next to the exe). The
+step-by-step version of this, aimed at non-technical users, lives at
+<https://downloadify.co.uk/setup.html>. The client secret is only needed for
+the 100+ track case *without* logging in; if you log in, it's not required,
+so the in-app prompt doesn't ask for it.
+
 **Important if you're publishing this project**: `.env` is already in
 `.gitignore` — keep it that way, and never commit real credentials or paste
 them into a public repo. This key is meant to be **per-user**: each person

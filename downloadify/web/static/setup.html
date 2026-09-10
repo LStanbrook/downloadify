@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Downloadify — Spotify setup</title>
+<meta name="description" content="Step-by-step: create a free Spotify key so Downloadify can log in for your private and personalized playlists and handle playlists over 100 tracks." />
+<link rel="icon" href="/favicon.ico" />
+<style>
+  :root {
+    --ink: #0d1210;
+    --surface: #141a16;
+    --surface-high: #1c2620;
+    --signal: #1db954;
+    --tape: #e2984f;
+    --paper: #eef2ee;
+    --mist: #8fa398;
+    --line: #24302a;
+    --font-body: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Cascadia Code", Consolas, "SF Mono", ui-monospace, Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--paper); text-decoration: none; border-bottom: 1px solid var(--signal); }
+  a:hover, a:focus-visible { color: var(--signal); }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .nav {
+    padding: 28px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .wordmark {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .wordmark .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--signal); box-shadow: 0 0 10px 1px var(--signal);
+  }
+
+  main { padding: 56px 0 80px; }
+
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tape);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: var(--font-body);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    font-size: clamp(34px, 6vw, 52px);
+    line-height: 1.02;
+    margin: 0 0 20px;
+  }
+
+  .lede {
+    font-size: 17px;
+    color: var(--mist);
+    margin: 0 0 14px;
+  }
+
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--tape);
+    border-radius: 4px;
+    padding: 16px 18px;
+    font-size: 14.5px;
+    color: var(--mist);
+    margin: 28px 0 44px;
+  }
+
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+    padding: 0;
+    margin: 0;
+  }
+
+  ol.steps > li {
+    counter-increment: step;
+    position: relative;
+    padding: 0 0 32px 56px;
+    border-left: 1px solid var(--line);
+    margin-left: 16px;
+  }
+
+  ol.steps > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+
+  ol.steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: -16px;
+    top: -2px;
+    width: 32px; height: 32px;
+    display: grid;
+    place-items: center;
+    background: var(--surface-high);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--signal);
+  }
+
+  ol.steps h2 {
+    font-family: var(--font-body);
+    font-size: 17px;
+    font-weight: 700;
+    margin: 4px 0 8px;
+  }
+
+  ol.steps p { margin: 0 0 8px; color: var(--mist); font-size: 14.5px; }
+
+  ol.steps ul {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: var(--mist);
+    font-size: 14.5px;
+  }
+  ol.steps ul li { margin-bottom: 6px; }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 2px 6px;
+    color: var(--paper);
+    white-space: nowrap;
+  }
+
+  .after {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+  }
+
+  .after h2 {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tape);
+    margin: 0 0 14px;
+  }
+
+  .after ul { padding-left: 18px; margin: 0; color: var(--mist); font-size: 14.5px; }
+  .after ul li { margin-bottom: 10px; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 32px 0 48px;
+    font-size: 13px;
+    color: var(--mist);
+  }
+  footer a { border: none; }
+
+  :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="wrap">
+    <a class="wordmark" href="/"><span class="dot"></span>Downloadify</a>
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+    <p class="kicker">Optional setup · about 2 minutes</p>
+    <h1>Set up Spotify login</h1>
+    <p class="lede">
+      Regular public playlists need none of this. Do this only if you want
+      Downloadify to reach your <strong>private playlists</strong>,
+      <strong>personalized ones</strong> like Discover Weekly, or playlists
+      with <strong>more than 100 tracks</strong>.
+    </p>
+    <p class="lede">
+      You'll create your own free Spotify app to get a "Client ID", then
+      paste it into Downloadify once. It's free, it doesn't need Spotify
+      Premium, and the ID stays on your computer.
+    </p>
+
+    <div class="callout">
+      Downloadify only ever <em>reads</em> your playlists with this. It can't
+      post, follow, change anything, or see anything else on your account.
+    </div>
+
+    <ol class="steps">
+      <li>
+        <h2>Open the Spotify Developer Dashboard</h2>
+        <p>
+          Go to
+          <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a>
+          and log in with any Spotify account — a free account is fine.
+        </p>
+      </li>
+      <li>
+        <h2>Click "Create app"</h2>
+        <p>It's a button near the top of the dashboard.</p>
+      </li>
+      <li>
+        <h2>Fill in the form</h2>
+        <ul>
+          <li><strong>App name:</strong> anything — e.g. <code>Downloadify</code></li>
+          <li><strong>App description:</strong> anything — e.g. <code>Personal playlist downloader</code></li>
+          <li><strong>Redirect URI:</strong> type exactly <code>http://127.0.0.1:8080</code> and click <strong>Add</strong></li>
+          <li>Tick the <strong>Web API</strong> checkbox</li>
+          <li>Agree to the terms, then click <strong>Save</strong></li>
+        </ul>
+      </li>
+      <li>
+        <h2>Open your new app's Settings</h2>
+        <p>There's a <strong>Settings</strong> button on the app's page.</p>
+      </li>
+      <li>
+        <h2>Copy the Client ID</h2>
+        <p>
+          It's a 32-character string of letters and numbers. Copy that one.
+          You do <strong>not</strong> need the client secret.
+        </p>
+      </li>
+      <li>
+        <h2>Paste it into Downloadify</h2>
+        <p>
+          In the app, click <strong>Set up Spotify</strong> in the top-right,
+          paste the Client ID, and click <strong>Save</strong>.
+        </p>
+      </li>
+      <li>
+        <h2>Log in</h2>
+        <p>
+          Click <strong>Log in with Spotify</strong> and finish signing in
+          in the browser tab that opens. Downloadify remembers it — you only
+          do this once.
+        </p>
+      </li>
+    </ol>
+
+    <div class="after">
+      <h2>Good to know</h2>
+      <ul>
+        <li>The key is per-person: everyone who wants login creates their own. There's no shared account and no waiting list.</li>
+        <li>If your playlist is 100 tracks or fewer and public, you can skip all of this — it works with no setup.</li>
+        <li>To remove it later, click <strong>Change API key</strong> in the app and clear the field, or delete <code>.downloadify_settings.json</code> next to the app.</li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="/">← Back to Downloadify</a>
+  </div>
+</footer>
+
+</body>
+</html>

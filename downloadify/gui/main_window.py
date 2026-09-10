@@ -124,6 +124,10 @@ class MainWindow(QMainWindow):
         self.browse_playlists_btn.setObjectName("browseButton")
         self.browse_playlists_btn.clicked.connect(self._on_browse_playlists_clicked)
         login_col.addWidget(self.browse_playlists_btn)
+        self.spotify_key_btn = QPushButton("Change API key")
+        self.spotify_key_btn.setObjectName("browseButton")
+        self.spotify_key_btn.clicked.connect(self._prompt_for_spotify_key)
+        login_col.addWidget(self.spotify_key_btn)
         header.addLayout(login_col)
 
         return header
@@ -232,12 +236,30 @@ class MainWindow(QMainWindow):
 
     def _update_login_state(self) -> None:
         logged_in = spotify_auth.is_logged_in()
-        self.spotify_login_status.setText(
-            "Logged into Spotify" if logged_in else "Not logged into Spotify"
-        )
-        self.spotify_login_btn.setText("Log out" if logged_in else "Log in with Spotify")
+        has_key = bool(config.SPOTIFY_CLIENT_ID)
+
+        if logged_in:
+            self.spotify_login_status.setText("Logged into Spotify")
+            self.spotify_login_btn.setText("Log out")
+        elif has_key:
+            self.spotify_login_status.setText("Not logged into Spotify")
+            self.spotify_login_btn.setText("Log in with Spotify")
+        else:
+            self.spotify_login_status.setText("Spotify not set up")
+            self.spotify_login_btn.setText("Set up Spotify")
+
         self.spotify_login_btn.setEnabled(True)
         self.browse_playlists_btn.setEnabled(logged_in)
+        # Nothing to change until a key has actually been entered.
+        self.spotify_key_btn.setVisible(has_key)
+
+    def _prompt_for_spotify_key(self) -> bool:
+        """Open the Client ID dialog. Returns True once a key is set."""
+        from downloadify.gui.spotify_key_dialog import SpotifyKeyDialog
+
+        SpotifyKeyDialog(self).exec()
+        self._update_login_state()
+        return bool(config.SPOTIFY_CLIENT_ID)
 
     def _on_spotify_login_clicked(self) -> None:
         if spotify_auth.is_logged_in():
@@ -245,15 +267,8 @@ class MainWindow(QMainWindow):
             self._update_login_state()
             return
 
-        if not config.SPOTIFY_CLIENT_ID:
-            QMessageBox.warning(
-                self,
-                "Spotify login unavailable",
-                "Set SPOTIFY_CLIENT_ID in your .env first -- this is the same "
-                "free key used for large playlists. See the README for how "
-                "to get one (no login of your own needed to create it).",
-            )
-            return
+        if not config.SPOTIFY_CLIENT_ID and not self._prompt_for_spotify_key():
+            return  # user closed the setup dialog without entering a key
 
         self.spotify_login_btn.setEnabled(False)
         self.spotify_login_status.setText("Waiting for login in your browser…")
